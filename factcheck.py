@@ -1,11 +1,21 @@
 # factcheck.py
 
+import string
 import torch
 from typing import List
 import numpy as np
 import spacy
 import gc
 
+import nltk
+# from nltk.translate.bleu_score import sentence_bleu
+# from nltk.translate.bleu_score import SmoothingFunction
+# from nltk.metrics import rouge
+from collections import Counter
+from typing import List, Dict, Union
+
+nltk.download('stopwords')
+nltk.download('punkt')
 
 class FactExample:
     """
@@ -79,9 +89,88 @@ class AlwaysEntailedFactChecker(object):
 
 
 class WordRecallThresholdFactChecker(object):
-    def predict(self, fact: str, passages: List[dict]) -> str:
-        raise Exception("Implement me")
 
+    def cosine_similarity(self, vector1, vector2):
+        dot_product = np.dot(vector1, vector2)
+        norm_a = np.linalg.norm(vector1)
+        norm_b = np.linalg.norm(vector2)
+        similarity = dot_product / (norm_a * norm_b)
+        return similarity
+
+    def jaccard_similarity(self, vector1, vector2):
+        intersection = np.sum(np.minimum(vector1, vector2))
+        union = np.sum(np.maximum(vector1, vector2))
+        similarity = intersection / union if union else 0
+        return similarity
+
+    def predict(self, fact: str, passages: List[dict]) -> str:
+        tokenized_facts = nltk.word_tokenize(fact)
+
+        stem: bool = True
+        remove_punctuation : bool = True
+        remove_stop_words: bool = False
+        similarity_metric: str = 'overlap'
+        threshold: float = 0.6
+
+        stemmer = nltk.stem.PorterStemmer()
+
+        if remove_punctuation:
+            tokenized_facts = [word for word in tokenized_facts if word not in string.punctuation]
+
+        if stem:
+            tokenized_facts = [stemmer.stem(word) for word in tokenized_facts]
+        
+        if remove_stop_words:
+            stop_words = set(nltk.corpus.stopwords.words('english'))
+            tokenized_facts = [word for word in tokenized_facts if word.lower() not in stop_words]
+
+        stop_words = set(nltk.corpus.stopwords.words('english'))
+
+        results = []
+        for passage in passages:
+            passage_text = passage['title'] + ' ' + passage['text']
+            tokenized_passage = nltk.word_tokenize(passage_text)
+
+            if remove_punctuation:
+                tokenized_passage = [word for word in tokenized_passage if word not in string.punctuation]
+
+            if stem:
+                tokenized_passage = [stemmer.stem(word) for word in tokenized_passage]
+        
+            if remove_stop_words:
+                tokenized_passage = [word for word in tokenized_passage if word.lower() not in stop_words]
+        
+            # word frequency vectors
+            word_set = set(tokenized_facts + tokenized_passage)
+            vector1 = [tokenized_facts.count(word) for word in word_set]
+            vector2 = [tokenized_passage.count(word) for word in word_set]
+
+            # similarity calculation
+            if similarity_metric == 'cosine':
+                sim = self.cosine_similarity(vector1, vector2)
+            elif similarity_metric == 'jaccard':
+                sim = self.jaccard_similarity(vector1, vector2)
+            elif similarity_metric == 'overlap':
+                overlap_coefficient = len(set(tokenized_facts) & set(tokenized_passage)) / min(len(set(tokenized_facts)), len(set(tokenized_passage)))
+                sim = overlap_coefficient
+            else:
+                raise ValueError(f'Unsupported similarity metric: {similarity_metric}')
+        
+            # add similarity result to results list
+            results.append(sim)
+
+        # compute average similarity score
+        average_similarity = np.mean(results) if results else 0
+        
+        # threshold Checking
+        meets_threshold = average_similarity >= threshold
+        prediction = ""
+        if meets_threshold:
+            prediction = "S"
+        else:
+            prediction = "NS"
+
+        return prediction
 
 class EntailmentFactChecker(object):
     def __init__(self, ent_model):
