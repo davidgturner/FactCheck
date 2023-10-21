@@ -8,9 +8,6 @@ import spacy
 import gc
 
 import nltk
-# from nltk.translate.bleu_score import sentence_bleu
-# from nltk.translate.bleu_score import SmoothingFunction
-# from nltk.metrics import rouge
 from collections import Counter
 from typing import List, Dict, Union
 
@@ -106,11 +103,11 @@ class WordRecallThresholdFactChecker(object):
     def predict(self, fact: str, passages: List[dict]) -> str:
         tokenized_facts = nltk.word_tokenize(fact)
 
-        stem: bool = True
+        stem: bool = False # True
         remove_punctuation : bool = True
-        remove_stop_words: bool = False
-        similarity_metric: str = 'overlap'
-        threshold: float = 0.6
+        remove_stop_words: bool = False # True # False
+        similarity_metric: str = 'overlap' # 'cosine' # 'jaccard' # 'overlap'
+        threshold: float = 0.60
 
         stemmer = nltk.stem.PorterStemmer()
 
@@ -120,16 +117,20 @@ class WordRecallThresholdFactChecker(object):
         if stem:
             tokenized_facts = [stemmer.stem(word) for word in tokenized_facts]
         
+        stop_words = set(nltk.corpus.stopwords.words('english'))
+
         if remove_stop_words:
-            stop_words = set(nltk.corpus.stopwords.words('english'))
             tokenized_facts = [word for word in tokenized_facts if word.lower() not in stop_words]
 
-        stop_words = set(nltk.corpus.stopwords.words('english'))
+        # Remove Empty Strings
+        tokenized_facts = [word for word in tokenized_facts if word]
 
         results = []
         for passage in passages:
             passage_text = passage['title'] + ' ' + passage['text']
             tokenized_passage = nltk.word_tokenize(passage_text)
+
+            tokenized_passage = [word for word in tokenized_passage if word]
 
             if remove_punctuation:
                 tokenized_passage = [word for word in tokenized_passage if word not in string.punctuation]
@@ -160,7 +161,7 @@ class WordRecallThresholdFactChecker(object):
             results.append(sim)
 
         # compute average similarity score
-        average_similarity = np.mean(results) if results else 0
+        average_similarity = np.average(results) if results else 0
         
         # threshold Checking
         meets_threshold = average_similarity >= threshold
