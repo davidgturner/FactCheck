@@ -1,15 +1,16 @@
 # factcheck.py
 
+import re
 import string
 import torch
-from typing import List
 import numpy as np
 import spacy
 import gc
 
 import nltk
-from collections import Counter
+from nltk.corpus import stopwords
 from typing import List, Dict, Union
+from collections import Counter
 
 nltk.download('stopwords')
 nltk.download('punkt')
@@ -37,6 +38,15 @@ class EntailmentModel:
     def __init__(self, model, tokenizer):
         self.model = model
         self.tokenizer = tokenizer
+        print("ENTAILMENT MODEL TYPE THIS DERIVES FROM ", type(self.model))
+
+    def classify_entailment(self, probabilities, threshold=0.5):
+        if probabilities['entailment'] > threshold:
+            return 'entailment'
+        elif probabilities['contradiction'] > threshold:
+            return 'contradiction'
+        else:
+            return 'neutral'
 
     def check_entailment(self, premise: str, hypothesis: str):
         with torch.no_grad():
@@ -49,14 +59,23 @@ class EntailmentModel:
         # Note that the labels are ["entailment", "neutral", "contradiction"]. There are a number of ways to map
         # these logits or probabilities to classification decisions; you'll have to decide how you want to do this.
 
-        raise Exception("Not implemented")
+        probs = torch.softmax(outputs.logits, dim=-1).squeeze().tolist()
+
+        labels = ['contradiction', 'neutral', 'entailment']
+        probabilities = dict(zip(labels, probs))
+        prediction = self.classify_entailment(probabilities)
+
+        # predictions = torch.softmax(logits, dim=-1)
+        # labels = ['contradiction', 'neutral', 'entailment']
+        # prediction = labels[torch.argmax(predictions, dim=-1)]
+        # return prediction
 
         # To prevent out-of-memory (OOM) issues during autograding, we explicitly delete
         # objects inputs, outputs, logits, and any results that are no longer needed after the computation.
         del inputs, outputs, logits
         gc.collect()
 
-        # return something
+        return prediction
 
 
 class FactChecker(object):
@@ -94,19 +113,32 @@ class WordRecallThresholdFactChecker(object):
         similarity = dot_product / (norm_a * norm_b)
         return similarity
 
-    def jaccard_similarity(self, vector1, vector2):
-        intersection = np.sum(np.minimum(vector1, vector2))
-        union = np.sum(np.maximum(vector1, vector2))
-        similarity = intersection / union if union else 0
-        return similarity
+    # def jaccard_similarity(self, vector1, vector2):
+    #     intersection = np.sum(np.minimum(vector1, vector2))
+    #     union = np.sum(np.maximum(vector1, vector2))
+    #     similarity = intersection / union if union else 0
+    #     return similarity
+    
+    def jaccard_similarity(str1: str, str2: str) -> float:
+        """Compute the Jaccard similarity between two strings."""
+        a = set(str1.split()) 
+        b = set(str2.split())
+        c = a.intersection(b)
+        return float(len(c)) / (len(a) + len(b) - len(c))
 
+    def overlap_coefficient(self, tokenized_facts: str, tokenized_passage: str):
+        numerator = len(set(tokenized_facts) & set(tokenized_passage))
+        denominator = min(len(set(tokenized_facts)), len(set(tokenized_passage)))
+        overlap_coefficient = numerator / denominator
+        return overlap_coefficient
+    
     def predict(self, fact: str, passages: List[dict]) -> str:
         tokenized_facts = nltk.word_tokenize(fact)
 
         stem: bool = False # True
         remove_punctuation : bool = True
-        remove_stop_words: bool = False # True # False
-        similarity_metric: str = 'overlap' # 'cosine' # 'jaccard' # 'overlap'
+        remove_stop_words: bool = False
+        similarity_metric: str = 'overlap'
         threshold: float = 0.60
 
         stemmer = nltk.stem.PorterStemmer()
@@ -152,8 +184,7 @@ class WordRecallThresholdFactChecker(object):
             elif similarity_metric == 'jaccard':
                 sim = self.jaccard_similarity(vector1, vector2)
             elif similarity_metric == 'overlap':
-                overlap_coefficient = len(set(tokenized_facts) & set(tokenized_passage)) / min(len(set(tokenized_facts)), len(set(tokenized_passage)))
-                sim = overlap_coefficient
+                sim = self.overlap_coefficient(tokenized_facts, tokenized_passage)
             else:
                 raise ValueError(f'Unsupported similarity metric: {similarity_metric}')
         
@@ -175,11 +206,65 @@ class WordRecallThresholdFactChecker(object):
 
 class EntailmentFactChecker(object):
     def __init__(self, ent_model):
-        self.ent_model = ent_model
+        print("model that is being passed in here is: ", type(ent_model))
+        self.ent_model : EntailmentModel = ent_model
+
+    def clean_text(self, text: str) -> str:
+        text = text.lower()
+        text = re.sub(f"[{string.punctuation}]", "", text)
+        text = ' '.join([word for word in text.split() if word not in stopwords.words('english')])
+        return text
+
+    def jaccard_similarity(self, str1: str, str2: str) -> float:
+        a = set(str1.split()) 
+        b = set(str2.split())
+        c = a.intersection(b)
+        return float(len(c)) / (len(a) + len(b) - len(c))
 
     def predict(self, fact: str, passages: List[dict]) -> str:
-        raise Exception("Implement me")
+        cleaned_fact = self.clean_text(fact)
 
+        max_similarity = 0
+        most_similar_sentence = ""
+
+        predictions = []
+
+        for passage in passages:
+            # clean and split the text into sentences
+            cleaned_text = self.clean_text(passage["text"])
+            sentences = nltk.sent_tokenize(cleaned_text)
+
+            # Loop over the sentences
+            for sentence in sentences:
+                # use the model here
+                prediction = self.ent_model.check_entailment(cleaned_fact, sentence)
+                predictions.append(prediction)
+                # Compute the similarity between the sentence and the given fact
+                # similarity = self.jaccard_similarity(sentence, cleaned_fact)
+
+                # update max similarity and the most similar sentence
+                # if similarity > max_similarity:
+                #     print("sim sim ", similarity, " for sent ", sentence)
+                #     max_similarity = similarity
+                #     most_similar_sentence = sentence
+
+            # count occurrences of each prediction type
+            prediction_counts = Counter(predictions)
+
+            # sort predictions by the count and the priority order
+            sorted_predictions = sorted(prediction_counts.items(), key=lambda x: (-x[1], ['entailment', 'neutral', 'contradiction'].index(x[0])))
+
+            # return prediction with the maximum count and highest priority
+            max_pred = sorted_predictions[0][0]
+            # print("max pred ", max_pred)
+            preddy = ""
+            if max_pred == 'entailment':
+                preddy="S"
+            else:
+                preddy="NS"
+            return preddy
+
+        # return most_similar_sentence, max_similarity
 
 # OPTIONAL
 class DependencyRecallThresholdFactChecker(object):
