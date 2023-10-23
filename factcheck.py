@@ -38,15 +38,39 @@ class EntailmentModel:
     def __init__(self, model, tokenizer):
         self.model = model
         self.tokenizer = tokenizer
-        print("ENTAILMENT MODEL TYPE THIS DERIVES FROM ", type(self.model))
+        # print("ENTAILMENT MODEL TYPE THIS DERIVES FROM ", type(self.model))
+        # self.
 
     def classify_entailment(self, probabilities, threshold=0.5):
-        if probabilities['entailment'] > threshold:
-            return 'entailment'
-        elif probabilities['contradiction'] > threshold:
-            return 'contradiction'
-        else:
-            return 'neutral'
+        probabilities = {
+                    'entailment': probabilities['entailment'],
+                    'neutral': probabilities['neutral'],
+                    'contradiction': probabilities['contradiction']
+                }
+        max_class = max(probabilities, key=probabilities.get)
+        if max_class == "neutral":
+            if probabilities['entailment'] > probabilities['contradiction']:
+                max_class = 'entailment'
+            else:
+                max_class = 'contradiction'
+
+        return max_class
+        # if probabilities['entailment'] > threshold:
+        #     return 'entailment'
+        # elif probabilities['contradiction'] > threshold:
+        #     return 'contradiction'
+        # else:
+        #     if probabilities['neutral'] > threshold:
+        #         return 'neutral'
+        #     else:
+        #         probabilities = {
+        #             'entailment': probabilities['entailment'],
+        #             'neutral': probabilities['neutral'],
+        #             'contradiction': probabilities['contradiction']
+        #         }
+        #         max_class = max(probabilities, key=probabilities.get)
+        #         return max_class
+                 
 
     def check_entailment(self, premise: str, hypothesis: str):
         with torch.no_grad():
@@ -58,16 +82,34 @@ class EntailmentModel:
 
         # Note that the labels are ["entailment", "neutral", "contradiction"]. There are a number of ways to map
         # these logits or probabilities to classification decisions; you'll have to decide how you want to do this.
+        # print("logits ", logits)
 
-        probs = torch.softmax(outputs.logits, dim=-1).squeeze().tolist()
+        logits_softmax = torch.softmax(logits[0], -1).tolist()
+        #print("logits softmax ", logits_softmax)
+        label_names = ["entailment", "neutral", "contradiction"]
+        prediction = {name: round(float(pred), 1) for pred, name in zip(logits_softmax, label_names)}
+        # print("prediction ", prediction)
 
-        labels = ['contradiction', 'neutral', 'entailment']
-        probabilities = dict(zip(labels, probs))
-        prediction = self.classify_entailment(probabilities)
+        # prediction = self.classify_entailment(prediction, threshold=0.50)
+
+        # print(prediction)
+
+        # probs = torch.softmax(outputs.logits, dim=-1).squeeze().tolist() # torch.softmax(outputs, dim=-1) # torch.softmax(outputs.logits, dim=-1).squeeze().tolist()
+        # print("logits probs ", probs)
+
+        # labels = ['contradiction', 'neutral', 'entailment']
+        # probabilities = dict(zip(labels, logits))
+        # print("probabilities ", probabilities)
+
+        # prediction = self.classify_entailment(probabilities)
+        # print("prediction ", prediction)
 
         # predictions = torch.softmax(logits, dim=-1)
+        # print("predictions ", predictions)
         # labels = ['contradiction', 'neutral', 'entailment']
         # prediction = labels[torch.argmax(predictions, dim=-1)]
+        # print("prediction ", prediction)
+
         # return prediction
 
         # To prevent out-of-memory (OOM) issues during autograding, we explicitly delete
@@ -206,65 +248,88 @@ class WordRecallThresholdFactChecker(object):
 
 class EntailmentFactChecker(object):
     def __init__(self, ent_model):
-        print("model that is being passed in here is: ", type(ent_model))
+        # print("model that is being passed in here is: ", type(ent_model))
         self.ent_model : EntailmentModel = ent_model
+        self.word_recall_fact_checker = WordRecallThresholdFactChecker()
 
     def clean_text(self, text: str) -> str:
-        text = text.lower()
-        text = re.sub(f"[{string.punctuation}]", "", text)
-        text = ' '.join([word for word in text.split() if word not in stopwords.words('english')])
-        return text
+        # Start with the NLTK English stop words
+        wiki_stopwords = set(stopwords.words('english'))
 
-    def jaccard_similarity(self, str1: str, str2: str) -> float:
-        a = set(str1.split()) 
-        b = set(str2.split())
-        c = a.intersection(b)
-        return float(len(c)) / (len(a) + len(b) - len(c))
+        # Add custom Wikipedia-specific stop words
+        wiki_stopwords.update([
+            'citation', 'needed', 'external', 'links', 'references', 'see', 'also', 
+            'isbn', 'doi', 'pmid', 'retrieved', 'archive', 'url', 'accessdate', 
+            'web', 'date', 'https', 'http', 'www', 'com', 'org', 'net', 'html', 
+            'pdf', 'jpg', 'png'
+        ])
+
+        # Step 1: Lowercasing
+        text = text.lower()
+        # Step 2: Keep only alpha a-z characters
+        text = re.sub('[^a-z\s]', '', text)
+        # Step 3: Stop words removal
+        text = ' '.join([word for word in text.split() if word not in wiki_stopwords])
+        # Step 4: Stemming
+        # text = ' '.join([nltk.stem.PorterStemmer().stem(word) for word in text.split()])
+        # Step 5: Remove punctuation characters (though they should already be removed by step 2)
+        text = re.sub(f"[{string.punctuation}]", "", text)
+        return text
 
     def predict(self, fact: str, passages: List[dict]) -> str:
         cleaned_fact = self.clean_text(fact)
-
-        max_similarity = 0
-        most_similar_sentence = ""
-
         predictions = []
 
+        # first use the overlap prediction model, if it doesn't pass that then throw it out
+        word_overlap_prediction = self.word_recall_fact_checker.predict(fact, passages)
+        if word_overlap_prediction == "SS":
+            return "NS"
+
+        # print("INSIDE predict!!!! ", fact)
         for passage in passages:
             # clean and split the text into sentences
-            cleaned_text = self.clean_text(passage["text"])
+            cleaned_text = self.clean_text(passage["title"] + " " + passage["text"])
             sentences = nltk.sent_tokenize(cleaned_text)
 
             # Loop over the sentences
             for sentence in sentences:
                 # use the model here
                 prediction = self.ent_model.check_entailment(cleaned_fact, sentence)
+                # print("cleaned_fact: ", cleaned_fact, " sentence: ", sentence, " prediction: ", prediction)
                 predictions.append(prediction)
-                # Compute the similarity between the sentence and the given fact
-                # similarity = self.jaccard_similarity(sentence, cleaned_fact)
 
-                # update max similarity and the most similar sentence
-                # if similarity > max_similarity:
-                #     print("sim sim ", similarity, " for sent ", sentence)
-                #     max_similarity = similarity
-                #     most_similar_sentence = sentence
+            # Initialize variables to store the max confidence and associated prediction type
+        max_confidence = -1
+        max_pred = None
 
-            # count occurrences of each prediction type
-            prediction_counts = Counter(predictions)
+        # Iterate over each dictionary in the predictions list
+        for prediction_confidences in predictions:
+            # Iterate over each prediction type and its confidence score in the current dictionary
+            for prediction, confidence in prediction_confidences.items():
+                # If the confidence is greater than the current max confidence, update max confidence and max pred
+                if confidence > max_confidence:
+                    max_confidence = confidence
+                    max_pred = prediction
+                elif confidence == max_confidence and max_pred == 'neutral' and prediction != 'neutral':
+                    max_pred = prediction
 
-            # sort predictions by the count and the priority order
-            sorted_predictions = sorted(prediction_counts.items(), key=lambda x: (-x[1], ['entailment', 'neutral', 'contradiction'].index(x[0])))
-
-            # return prediction with the maximum count and highest priority
-            max_pred = sorted_predictions[0][0]
-            # print("max pred ", max_pred)
-            preddy = ""
-            if max_pred == 'entailment':
-                preddy="S"
+        # Special case to handle ties when 'neutral' has the highest confidence
+        if max_pred == 'neutral':
+            # If 'entailment' and 'contradiction' have equal confidence, assign 'contradiction'
+            if predictions[-1]['entailment'] == predictions[-1]['contradiction']:
+                max_pred = 'contradiction'
+            # Otherwise, assign the prediction with higher confidence between 'entailment' and 'contradiction'
+            elif predictions[-1]['entailment'] > predictions[-1]['contradiction']:
+                max_pred = 'entailment'
             else:
-                preddy="NS"
-            return preddy
+                max_pred = 'contradiction'
 
-        # return most_similar_sentence, max_similarity
+        final_prediction = ""
+        if max_pred == 'entailment' and max_confidence > 0.75:
+            final_prediction="S"
+        else:
+            final_prediction="NS"
+        return final_prediction
 
 # OPTIONAL
 class DependencyRecallThresholdFactChecker(object):
