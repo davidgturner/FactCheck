@@ -70,7 +70,11 @@ class EntailmentModel:
         #         }
         #         max_class = max(probabilities, key=probabilities.get)
         #         return max_class
-                 
+
+    # Function to get the string label from the predicted class ID
+    def get_label_from_id(self, class_id):
+        labels = self.model.config.id2label
+        return labels[class_id]        
 
     def check_entailment(self, premise: str, hypothesis: str):
         with torch.no_grad():
@@ -84,10 +88,17 @@ class EntailmentModel:
         # these logits or probabilities to classification decisions; you'll have to decide how you want to do this.
         # print("logits ", logits)
 
-        logits_softmax = torch.softmax(logits[0], -1).tolist()
+        # Get model predictions
+        #outputs = model(**inputs)
+
+        # Obtain the predicted class ID and label
+        predicted_class_id = torch.argmax(logits, dim=1).item()
+        predicted_label = self.get_label_from_id(predicted_class_id)
+
+        #logits_softmax = torch.softmax(logits[0], -1).tolist()
         #print("logits softmax ", logits_softmax)
-        label_names = ["entailment", "neutral", "contradiction"]
-        prediction = {name: round(float(pred), 1) for pred, name in zip(logits_softmax, label_names)}
+        #label_names = ["entailment", "neutral", "contradiction"]
+        #prediction = {name: round(float(pred), 1) for pred, name in zip(logits_softmax, label_names)}
         # print("prediction ", prediction)
 
         # prediction = self.classify_entailment(prediction, threshold=0.50)
@@ -117,7 +128,7 @@ class EntailmentModel:
         del inputs, outputs, logits
         gc.collect()
 
-        return prediction
+        return predicted_label
 
 
 class FactChecker(object):
@@ -252,6 +263,20 @@ class EntailmentFactChecker(object):
         self.ent_model : EntailmentModel = ent_model
         self.word_recall_fact_checker = WordRecallThresholdFactChecker()
 
+    # def clean_text(self, text: str) -> str:
+    #     text = text.lower()  # Convert to lowercase
+    #     text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces with a single space
+    #     # text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
+    #     text = text.replace("</s>", "") # re.sub(r'[^\w\s]', '', text)
+    #     text = text.replace("<s>", "")
+    #     return text
+
+    # def clean_text(self, text):
+    #     text = text.lower()  # Convert to lowercase
+    #     text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces with a single space
+    #     text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
+    #     return text    
+
     def clean_text(self, text: str) -> str:
         # Start with the NLTK English stop words
         wiki_stopwords = set(stopwords.words('english'))
@@ -266,10 +291,13 @@ class EntailmentFactChecker(object):
 
         # Step 1: Lowercasing
         text = text.lower()
+        
+        text = re.sub(r'<s>|</s>', '', text)  # Remove <s> and </s> tags
+
         # Step 2: Keep only alpha a-z characters
         text = re.sub('[^a-z\s]', '', text)
         # Step 3: Stop words removal
-        text = ' '.join([word for word in text.split() if word not in wiki_stopwords])
+        # text = ' '.join([word for word in text.split() if word not in wiki_stopwords])
         # Step 4: Stemming
         # text = ' '.join([nltk.stem.PorterStemmer().stem(word) for word in text.split()])
         # Step 5: Remove punctuation characters (though they should already be removed by step 2)
@@ -282,23 +310,58 @@ class EntailmentFactChecker(object):
 
         # first use the overlap prediction model, if it doesn't pass that then throw it out
         word_overlap_prediction = self.word_recall_fact_checker.predict(fact, passages)
-        if word_overlap_prediction == "SS":
+        if word_overlap_prediction == "NS":
+            # print("throwing away a non supported prediction from the word overlap ", word_overlap_prediction)
             return "NS"
-
+        
+        support_count = 0
+        total_passages = len(passages)
         # print("INSIDE predict!!!! ", fact)
+
+        # print("passages ", passages)
         for passage in passages:
             # clean and split the text into sentences
-            cleaned_text = self.clean_text(passage["title"] + " " + passage["text"])
+
+            cleaned_text = self.clean_text(passage["text"])
+            # cleaned_text = self.clean_text(passage["title"] + "." + passage["text"])
+
+            # print("TITLE: ", passage["title"])
+            # print("TEXT: ", passage["text"])
+
             sentences = nltk.sent_tokenize(cleaned_text)
+
+            max_prediction = "contradiction"  # Initialize with the minimum value
+
+            #print("# of sentences ", len(sentences))
+            #for sent in sentences:
+            #    print("sent: ", sent, "\n")
+            #print("sent token BEFORE ", cleaned_text, " sent token AFTER ", sentences)
 
             # Loop over the sentences
             for sentence in sentences:
                 # use the model here
                 prediction = self.ent_model.check_entailment(cleaned_fact, sentence)
-                # print("cleaned_fact: ", cleaned_fact, " sentence: ", sentence, " prediction: ", prediction)
-                predictions.append(prediction)
+                
+                # Update the max prediction if the current sentence entails the fact
+                if prediction == "entailment":
+                    max_prediction = "entailment"
+                    break  # No need to check further if we already found an entailment
 
-            # Initialize variables to store the max confidence and associated prediction type
+                # if prediction == "entailment":
+                #     support_count += 1
+
+                # print("cleaned_fact: ", cleaned_fact, " sentence: ", sentence, " prediction: ", prediction)
+                #predictions.append(prediction)
+            
+            # Print the result
+            # print(f"Fact: '{fact}'\nPassage: '{passage}'\nMax Prediction: {max_prediction.capitalize()}\n")
+    
+            # Count the number of supports (entailments)
+            if max_prediction == "entailment":
+                support_count += 1
+
+        """
+        # Initialize variables to store the max confidence and associated prediction type
         max_confidence = -1
         max_pred = None
 
@@ -323,12 +386,23 @@ class EntailmentFactChecker(object):
                 max_pred = 'entailment'
             else:
                 max_pred = 'contradiction'
+        """
+        
+        # print("Fact: ", fact)
+        # print("Passages: ", passages)
 
-        final_prediction = ""
-        if max_pred == 'entailment' and max_confidence > 0.75:
+        if (support_count > (total_passages / 2)) or ((support_count == (total_passages / 2)) and ((total_passages % 2) == 0)):
+            # print("Final Assessment: Supported")
             final_prediction="S"
         else:
+            # print("Final Assessment: Not Supported")
             final_prediction="NS"
+
+        # final_prediction = ""
+        # if max_pred == 'entailment' and max_confidence > 0.75:
+        #     final_prediction="S"
+        # else:
+        #     final_prediction="NS"
         return final_prediction
 
 # OPTIONAL

@@ -41,6 +41,8 @@ for label, sentence_pairs in examples.items():
 
         # Obtain the predicted class ID and label
         predicted_class_id = torch.argmax(outputs.logits, dim=1).item()
+        print("predicted_class_id ", predicted_class_id)
+        
         predicted_label = get_label_from_id(predicted_class_id)
 
         # Print the result
