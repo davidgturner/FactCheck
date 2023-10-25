@@ -1,6 +1,7 @@
 # factscore_retrieval_interface.py
 
 import json
+import sys
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from typing import List, Dict
 from tqdm import tqdm
@@ -88,9 +89,15 @@ def predict_two_classes(examples: List[FactExample], fact_checker):
         raw_pred = fact_checker.predict(example.fact, example.passages)
         pred_label = gold_label_indexer.index(raw_pred)
 
+        # print("Gold Label: ", converted_label)
+        # print("raw_pred: ", raw_pred)
+        # if converted_label != raw_pred:
+        #     print("Gold truth: ", converted_label, " Prediction: ", raw_pred, "Fact: ", example.fact, " Passages: ", example.passages)
+        #     sys.exit()
+           
         confusion_mat[gold_label][pred_label] += 1
         ex_count += 1
-    print_eval_stats(confusion_mat, gold_label_indexer)
+    return print_eval_stats(confusion_mat, gold_label_indexer)
 
 
 def print_eval_stats(confusion_mat, gold_label_indexer):
@@ -118,6 +125,7 @@ def print_eval_stats(confusion_mat, gold_label_indexer):
         print("Prec for " + gold_label_indexer[idx] + ": " + repr(num_correct) + "/" + repr(num_pred) + " = " + repr(prec))
         print("Rec for " + gold_label_indexer[idx] + ": " + repr(num_correct) + "/" + repr(num_gold) + " = " + repr(rec))
         print("F1 for " + gold_label_indexer[idx] + ": " + repr(f1))
+    return correct_preds/total_preds
 
 
 if __name__=="__main__":
@@ -154,7 +162,23 @@ if __name__=="__main__":
     else:
         raise NotImplementedError
 
+    # thresholds = np.linspace(0.50, 1.0, 100)  # This tests thresholds from 0 to 1 in 0.01 increments
+    # thresholds = np.arange(0.50, 0.90, 0.05)
     # import random
-    # examples = random.sample(examples, 50)
+    # results = {}
 
-    predict_two_classes(examples, fact_checker)
+    # # Loop over thresholds and evaluate accuracy
+    # for threshold in thresholds:
+    #     # accuracy = evaluate_accuracy(threshold, fact, passages)
+    #     # examples = random.sample(examples, 50)
+    #     accuracy = predict_two_classes(examples, fact_checker, threshold)
+    #     results[threshold] = accuracy
+    #     if threshold is not None and accuracy is not None:
+    #         print(f"Threshold: {threshold:.2f}, Accuracy: {accuracy:.2f}")
+
+    # # Identify the threshold with the highest accuracy
+    # best_threshold = max(results, key=results.get)
+    # print(f"\nBest Threshold: {best_threshold:.2f}, Accuracy: {results[best_threshold]:.2f}")
+    # examples = examples[:50]
+    # for threshold in 
+    accuracy = predict_two_classes(examples, fact_checker)

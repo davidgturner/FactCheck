@@ -48,10 +48,7 @@ passages = [{"title": title, "text": text} for title, text in zip(titles, texts)
 
 # Convert to JSON
 passages_json = json.dumps(passages, indent=4)
-
 print(passages_json)
-
-# print(passages)
 
 # passages_string = """
 # [{'title': 'Jean Daullé', 'text': '<s>Jean Daullé (18 May 1703 – 23 April 1763) was a French engraver.</s><s>Biography. He was the son of Jean Daullé, a silversmith, and his wife, Anne née Dennel. At the age of fourteen, he received training from an engraver named Robart, at the priory of Saint-Pierre d\'Abbeville. He then went to Paris, and worked at the studios of Robert Hecquet (1693-1775), who was also originally from Picardy. In 1735, his work attracted the attention of the engraver and merchant, Pierre-Jean Mariette, who provided him with professional recommendations. Soon after, he was approached by the painter, Hyacinthe Rigaud, who wanted to 
@@ -64,27 +61,15 @@ print(passages_json)
 # # Convert single quotes to double quotes and decode
 # passages = json.loads(passages_string.replace("'", '"'))
 
-
-# fact = ""
-
-# passages = 
-
 # Function to get the string label from the predicted class ID
 def get_label_from_id(class_id):
     labels = model.config.id2label
     return labels[class_id]
 
-# Clean the fact
-fact = clean_text(fact)
-
-# Evaluate the fact against the group of passages
-support_count = 0
-total_passages = len(passages)
-
 def evaluate_passage(fact, passage_text):
     # Clean the passage
     passage_text = clean_text(passage_text)
-    
+        
     # Tokenize the fact and passage and obtain model inputs
     inputs = tokenizer(fact, passage_text, return_tensors="pt", truncation=True, max_length=512)
 
@@ -94,22 +79,78 @@ def evaluate_passage(fact, passage_text):
     # Obtain the predicted class ID and label
     predicted_class_id = torch.argmax(outputs.logits, dim=1).item()
     predicted_label = get_label_from_id(predicted_class_id)
-    
-    return predicted_label
+        
+    # Calculate the confidence of the prediction
+    probabilities = torch.nn.functional.softmax(outputs.logits, dim=1)
+    confidence = probabilities[0][predicted_class_id].item()
+        
+    return predicted_label, confidence
 
-for passage in passages:
-    # Use the entire passage text for evaluation
-    predicted_label = evaluate_passage(fact, passage['text'])
-    
-    # Print the result
-    print(f"Fact: '{fact}'\nPassage: '{passage['text']}'\nPrediction: {predicted_label.capitalize()}\n")
-    
-    # Count the number of supports (entailments)
-    if predicted_label == "entailment":
-        support_count += 1
+# Evaluate the fact against the group of passages
+def get_final_assessment(fact, passages) -> str:
+    # Clean the fact
+    fact = clean_text(fact)
 
-# Print the final binary assessment based on majority vote
-if support_count > total_passages / 2 or (support_count == total_passages / 2 and total_passages % 2 == 0):
-    print("Final Assessment: Supported")
-else:
-    print("Final Assessment: Not Supported")
+    # Confidence threshold
+    confidence_threshold = 0.50  # You can adjust this value based on your requirements
+    supported_by_any_passage = False
+
+    for passage in passages:
+        predicted_label, confidence = evaluate_passage(fact, passage['text'])
+        
+        # Print the result
+        print(f"Fact: '{fact}'\nPassage: '{passage['text']}'\nPrediction: {predicted_label.capitalize()} with confidence {confidence:.2f}\n")
+        
+        # Check if the fact is supported by the passage with confidence above the threshold
+        if predicted_label == "entailment" and confidence > confidence_threshold:
+            supported_by_any_passage = True
+
+    # Print the final assessment
+    assessment = ""
+    if supported_by_any_passage:
+        print("Final Assessment: Supported")
+        assessment = "S"
+    else:
+        print("Final Assessment: Not Supported")
+        assessment = "NS"
+
+    return assessment
+
+def get_final_assessment2(fact, passages):
+    # Thresholds for decision-making
+    SUPPORT_THRESHOLD = 0.7
+    CONTRADICTION_THRESHOLD = 0.7
+
+    support_confidences = []
+    contradiction_confidences = []
+
+    for passage in passages:
+        # Use the entire passage text for evaluation
+        predicted_label, confidence = evaluate_passage(fact, passage['text'])
+        
+        # Print the result
+        print(f"Fact: '{fact}'\nPassage: '{passage['text']}'\nPrediction: {predicted_label.capitalize()} (Confidence: {confidence:.2f})\n")
+        
+        # Store confidence scores based on prediction
+        if predicted_label == "entailment":
+            support_confidences.append(confidence)
+        elif predicted_label == "contradiction":
+            contradiction_confidences.append(confidence)
+
+        # Calculate average confidences
+        avg_support_confidence = sum(support_confidences) / len(support_confidences) if support_confidences else 0
+        avg_contradiction_confidence = sum(contradiction_confidences) / len(contradiction_confidences) if contradiction_confidences else 0
+
+        print(f"Average Support Confidence: {avg_support_confidence:.2f}")
+        print(f"Average Contradiction Confidence: {avg_contradiction_confidence:.2f}")
+
+        # Final decision based on average confidences and thresholds
+        if avg_support_confidence > SUPPORT_THRESHOLD and avg_support_confidence > avg_contradiction_confidence:
+            print("Final Assessment: Supported")
+            return "S"
+        else:
+            print("Final Assessment: Not Supported")
+            return "NS"
+
+assessment = get_final_assessment2(fact, passages)
+print("Assessment: ", assessment)
