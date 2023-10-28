@@ -56,14 +56,10 @@ class EntailmentModel:
 
     # get_label_from_id - function to get the string label from the predicted class ID
     def get_label_from_id(self, class_id):
-        # print("get_label_from_id input class_id ", class_id)
-        # print("get_label_from_id label dict ", self.model.config.id2label)
-        # labels = self.model.config.id2label
         labels = self.label_mapping
         return labels[class_id]        
 
     def check_entailment(self, premise: str, hypothesis: str):
-
         # Ensure model is in evaluation mode
         self.model.eval()
 
@@ -74,35 +70,15 @@ class EntailmentModel:
             outputs = self.model(**inputs)
             logits = outputs.logits
 
-        # print("logits ", logits)
-
-        # Note that the labels are ["entailment", "neutral", "contradiction"]. There are a number of ways to map
-        # these logits or probabilities to classification decisions; you'll have to decide how you want to do this.
-
-        # obtain the predicted class ID and label
-        predicted_class_id = torch.argmax(logits, dim=1).item()
-        predicted_label = self.get_label_from_id(predicted_class_id)
-
-        # calculate the confidence of the prediction
-        probabilities = torch.nn.functional.softmax(logits, dim=1)
-        # print("probs ", probabilities)
-        confidence = probabilities[0][predicted_class_id].item()
-
-
-
-        # Get predicted class and confidence
-        predicted_class_id = torch.argmax(logits, dim=1).item()
-        predicted_label = self.get_label_from_id(predicted_class_id)
-        probabilities = torch.nn.functional.softmax(logits, dim=1)
-        confidence = probabilities[0][predicted_class_id].item()
-
+        # convert logits to probs
+        probs = torch.nn.functional.softmax(logits, dim=-1)
+    
         # To prevent out-of-memory (OOM) issues during autograding, we explicitly delete
         # objects inputs, outputs, logits, and any results that are no longer needed after the computation.
         del inputs, outputs, logits
         gc.collect()
   
-        return predicted_label, confidence
-
+        return probs[0].tolist()
 
 class FactChecker(object):
     """
@@ -159,7 +135,7 @@ class WordRecallThresholdFactChecker(object):
         if remove_stop_words:
             tokenized_facts = [word for word in tokenized_facts if word.lower() not in stop_words]
 
-        # Remove Empty Strings
+        # remove empty strings
         tokenized_facts = [word for word in tokenized_facts if word]
 
         results = []
@@ -213,7 +189,7 @@ class WordRecallThresholdFactChecker(object):
         if remove_stop_words:
             tokenized_facts = [word for word in tokenized_facts if word.lower() not in stop_words]
 
-        # Remove Empty Strings
+        # remove empty strings
         tokenized_facts = [word for word in tokenized_facts if word]
 
         results = []
@@ -262,112 +238,71 @@ class EntailmentFactChecker(object):
     def clean_text(self, text: str) -> str:
         # convert to lowercase
         text = text.lower()
-        
         # replace multiple spaces with a single space
         text = re.sub(r'\s+', ' ', text)
-        
         # remove <s> and </s> tags
         text = re.sub(r'<s>|</s>', '', text)
-        
         # remove punctuation
         text = re.sub(f"[{string.punctuation}]", "", text)
-        
-        # Uncomment below if you want to remove stopwords and apply stemming
-        # wiki_stopwords = set(stopwords.words('english'))
-        # text = ' '.join([word for word in text.split() if word not in wiki_stopwords])
-        # text = ' '.join([nltk.stem.PorterStemmer().stem(word) for word in text.split()])
-        
         return text
 
-    def get_final_assessment(self, fact, passages, support_threshold=0.70) -> str:
+    def check_fact(self, fact, passages, threshold=0.5, batch_size=16):
+        max_entailment_score = 0.0
+        contradiction_found = False
+        neutral_count = 0
+        total_sentences = 0
 
-        support_confidences = []
-        contradiction_confidences = []
+        ENTAILMENT_INDEX = 0
+        NEUTRAL_INDEX = 1
+        CONTRADICTION_INDEX = 2
 
         for passage in passages:
-            # Combine title and text, then clean and tokenize
-            full_text = passage['title'] + ". " + passage['text']
+            # combine title and text and sentence tokenize
+            full_text = passage['title'] + "." + passage['text']
             sentences = nltk.sent_tokenize(full_text)
-            
-            # Filter out sentences that are 1-2 words or only numeric/punctuation characters
-            filtered_sentences = [sentence for sentence in sentences if len(sentence.split()) > 2 and not sentence.isnumeric() and not all(char in string.punctuation for char in sentence)]
+            total_sentences += len(sentences)
 
-            # Use list comprehension to get predictions for all sentences
-            predictions = [self.ent_model.check_entailment(fact, self.clean_text(sentence)) for sentence in filtered_sentences]
+            # batch processing over the sentences
+            for i in range(0, len(sentences), batch_size):
+                batch_sentences = sentences[i:i+batch_size]
+                batch_entailment_probs = [self.ent_model.check_entailment(fact, self.clean_text(s)) for s in batch_sentences]
 
-            # Update confidence lists based on predictions
-            support_confidences.extend([conf for label, conf in predictions if label == "entailment"])
-            contradiction_confidences.extend([conf for label, conf in predictions if label == "contradiction"])
+                for entailment_probs in batch_entailment_probs:
+                    # if there is a contradiction, return "NS"
+                    if entailment_probs[CONTRADICTION_INDEX] > threshold:
+                        contradiction_found = True
+                        break
 
-            if len(contradiction_confidences) > 0:
-                return "NS"
-            # neutral_confidences.extend([conf for label, conf in predictions if label == "neutral"])
+                    # If the result is neutral, increment the neutral_count
+                    if max(entailment_probs) == entailment_probs[NEUTRAL_INDEX]:
+                        neutral_count += 1
 
-        # Calculate average confidences
-        avg_support_confidence = sum(support_confidences) / len(support_confidences) if support_confidences else 0
-        avg_contradiction_confidence = sum(contradiction_confidences) / len(contradiction_confidences) if contradiction_confidences else 0
+                    # update max_entailment_score
+                    max_entailment_score = max(max_entailment_score, entailment_probs[ENTAILMENT_INDEX])
 
-        # Make final decision based on average confidences and thresholds
-        if avg_support_confidence > support_threshold and avg_support_confidence > avg_contradiction_confidence and avg_contradiction_confidence == 0.0:
-            return "S"
-        else:
+                if contradiction_found:
+                    break
+
+            if contradiction_found:
+                break
+
+        # if significant majority of sentences are neutral, make a weighted decision
+        if (neutral_count / total_sentences) > threshold:
+            return "S" if max_entailment_score > threshold else "NS"
+        elif contradiction_found:
             return "NS"
-
-
-    # def get_final_assessment(self, fact, passages, support_threshold=0.70) -> str:
-
-    #     # # first use the overlap prediction model, if it doesn't pass that then throw it out
-    #     # word_overlap_prediction = self.word_recall_fact_checker.predict(fact, passages)
-    #     # if word_overlap_prediction == "NS":
-    #     #     return "NS"
-        
-    #     # threshold for decision-making
-    #     SUPPORT_THRESHOLD = support_threshold
-
-    #     support_confidences = []
-    #     contradiction_confidences = []
-    #     neutral_confidences = []
-
-    #     # cleaned_fact = self.clean_text(fact)
-    #     #print("passages ", passages)
-    #     for passage in passages:
-    #         # sentence tokenize
-    #         sentences = nltk.sent_tokenize(passage['title'] + ". " + passage['text'])
-
-    #         #print("sentences: ", sentences)
-    #         #self.clean_text(
-    #         for sentence in sentences:
-    #             predicted_label, confidence = self.ent_model.check_entailment(fact, self.clean_text(sentence))
-                
-    #             # store confidence scores based on prediction
-    #             if predicted_label == "entailment":
-    #                 support_confidences.append(confidence)
-    #             elif predicted_label == "contradiction":
-    #                 contradiction_confidences.append(confidence)
-    #             elif predicted_label == "neutral":
-    #                 neutral_confidences.append(confidence)
-
-    #     # calculate the average support confidence
-    #     avg_support_confidence = sum(support_confidences) / len(support_confidences) if support_confidences else 0
-    #     avg_contradiction_confidence = sum(contradiction_confidences) / len(contradiction_confidences) if contradiction_confidences else 0
-    #     #avg_neutral_confidence = sum(neutral_confidences) / len(neutral_confidences) if neutral_confidences else 0
-
-    #     # cinal decision based on average confidences and thresholds
-    #     if avg_support_confidence > 0.0 and avg_support_confidence > avg_contradiction_confidence and avg_contradiction_confidence == 0.0:
-    #         return "S"
-    #     else:
-    #         return "NS"
+        else:
+            return "S" if max_entailment_score > threshold else "NS"
 
     def predict(self, fact: str, passages: List[dict]) -> str:
         word_overlap_similarity = self.word_recall_fact_checker.evaluate_similarity(fact, passages)
-        if word_overlap_similarity < 0.20:
+        if word_overlap_similarity < 0.25:
             return "NS"
         cleaned_fact = self.clean_text(fact)
         
-        # call the consolidated function to get the final assessment
-        final_assessment = self.get_final_assessment(cleaned_fact, passages, 0.70)
-    
-        return final_assessment
+        threshold=0.75
+        batch_size=4
+        return self.check_fact(cleaned_fact, passages, threshold=threshold, batch_size=batch_size)
 
 # OPTIONAL
 class DependencyRecallThresholdFactChecker(object):
