@@ -94,11 +94,11 @@ def predict_two_classes(examples: List[FactExample], fact_checker):
             raw_pred = fact_checker.predict(example.fact, example.passages)
             pred_label = gold_label_indexer.index(raw_pred)
 
-            # if converted_label != raw_pred:
-            #     # Write the incorrect classification to the file
-            #     file.write(f"Gold truth: {converted_label}, Prediction: {raw_pred}, Fact: {example.fact}, Passages: {example.passages}\n")
-            #     file.write(f"Gold truth: {converted_label}, Prediction: {raw_pred}, Clean Fact: {fact_checker.clean_text(example.fact)}, clean Passages: {[fact_checker.clean_text(passage_dict['text']) for passage_dict in example.passages]}\n\n")
-            #     file.flush()
+            if converted_label != raw_pred:
+                # Write the incorrect classification to the file
+                file.write(f"Gold truth: {converted_label}, Prediction: {raw_pred}, Fact: {example.fact}, Passages: {example.passages}\n")
+                file.write(f"Gold truth: {converted_label}, Prediction: {raw_pred}, Clean Fact: {fact_checker.clean_text(example.fact)}, clean Passages: {[fact_checker.clean_text(passage_dict['text']) for passage_dict in example.passages]}\n\n")
+                file.flush()
 
             confusion_mat[gold_label][pred_label] += 1
             ex_count += 1
