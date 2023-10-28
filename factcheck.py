@@ -40,8 +40,6 @@ class EntailmentModel:
     def __init__(self, model, tokenizer):
         self.model = model
         self.tokenizer = tokenizer
-        # print("ENTAILMENT MODEL TYPE THIS DERIVES FROM ", type(self.model))
-        # self.
 
     def classify_entailment(self, probabilities, threshold=0.5):
         probabilities = {
@@ -57,21 +55,6 @@ class EntailmentModel:
                 max_class = 'contradiction'
 
         return max_class
-        # if probabilities['entailment'] > threshold:
-        #     return 'entailment'
-        # elif probabilities['contradiction'] > threshold:
-        #     return 'contradiction'
-        # else:
-        #     if probabilities['neutral'] > threshold:
-        #         return 'neutral'
-        #     else:
-        #         probabilities = {
-        #             'entailment': probabilities['entailment'],
-        #             'neutral': probabilities['neutral'],
-        #             'contradiction': probabilities['contradiction']
-        #         }
-        #         max_class = max(probabilities, key=probabilities.get)
-        #         return max_class
 
     # Function to get the string label from the predicted class ID
     def get_label_from_id(self, class_id):
@@ -88,59 +71,21 @@ class EntailmentModel:
 
         # Note that the labels are ["entailment", "neutral", "contradiction"]. There are a number of ways to map
         # these logits or probabilities to classification decisions; you'll have to decide how you want to do this.
-        # print("logits ", logits)
-
-        # Get model predictions
-        #outputs = model(**inputs)
 
         # Obtain the predicted class ID and label
         predicted_class_id = torch.argmax(logits, dim=1).item()
         predicted_label = self.get_label_from_id(predicted_class_id)
 
-        # Obtain the predicted class ID and label
-        # predicted_class_id = torch.argmax(outputs.logits, dim=1).item()
-        # predicted_label = self.get_label_from_id(predicted_class_id)
-            
         # Calculate the confidence of the prediction
         probabilities = torch.nn.functional.softmax(logits, dim=1)
         confidence = probabilities[0][predicted_class_id].item()
-
-        # print("Prediction Class ID: ", predicted_class_id, " Predicted Label: ", predicted_label, " Confidence: ", confidence)
-
-        #logits_softmax = torch.softmax(logits[0], -1).tolist()
-        #print("logits softmax ", logits_softmax)
-        #label_names = ["entailment", "neutral", "contradiction"]
-        #prediction = {name: round(float(pred), 1) for pred, name in zip(logits_softmax, label_names)}
-        # print("prediction ", prediction)
-
-        # prediction = self.classify_entailment(prediction, threshold=0.50)
-
-        # print(prediction)
-
-        # probs = torch.softmax(outputs.logits, dim=-1).squeeze().tolist() # torch.softmax(outputs, dim=-1) # torch.softmax(outputs.logits, dim=-1).squeeze().tolist()
-        # print("logits probs ", probs)
-
-        # labels = ['contradiction', 'neutral', 'entailment']
-        # probabilities = dict(zip(labels, logits))
-        # print("probabilities ", probabilities)
-
-        # prediction = self.classify_entailment(probabilities)
-        # print("prediction ", prediction)
-
-        # predictions = torch.softmax(logits, dim=-1)
-        # print("predictions ", predictions)
-        # labels = ['contradiction', 'neutral', 'entailment']
-        # prediction = labels[torch.argmax(predictions, dim=-1)]
-        # print("prediction ", prediction)
-
-        # return prediction
 
         # To prevent out-of-memory (OOM) issues during autograding, we explicitly delete
         # objects inputs, outputs, logits, and any results that are no longer needed after the computation.
         del inputs, outputs, logits
         gc.collect()
   
-        return predicted_label, confidence # , probabilities
+        return predicted_label, confidence
 
 
 class FactChecker(object):
@@ -170,26 +115,6 @@ class AlwaysEntailedFactChecker(object):
 
 
 class WordRecallThresholdFactChecker(object):
-
-    def cosine_similarity(self, vector1, vector2):
-        dot_product = np.dot(vector1, vector2)
-        norm_a = np.linalg.norm(vector1)
-        norm_b = np.linalg.norm(vector2)
-        similarity = dot_product / (norm_a * norm_b)
-        return similarity
-
-    # def jaccard_similarity(self, vector1, vector2):
-    #     intersection = np.sum(np.minimum(vector1, vector2))
-    #     union = np.sum(np.maximum(vector1, vector2))
-    #     similarity = intersection / union if union else 0
-    #     return similarity
-    
-    def jaccard_similarity(str1: str, str2: str) -> float:
-        """Compute the Jaccard similarity between two strings."""
-        a = set(str1.split()) 
-        b = set(str2.split())
-        c = a.intersection(b)
-        return float(len(c)) / (len(a) + len(b) - len(c))
 
     def overlap_coefficient(self, tokenized_facts: str, tokenized_passage: str):
         numerator = len(set(tokenized_facts) & set(tokenized_passage))
@@ -243,11 +168,7 @@ class WordRecallThresholdFactChecker(object):
             vector2 = [tokenized_passage.count(word) for word in word_set]
 
             # similarity calculation
-            if similarity_metric == 'cosine':
-                sim = self.cosine_similarity(vector1, vector2)
-            elif similarity_metric == 'jaccard':
-                sim = self.jaccard_similarity(vector1, vector2)
-            elif similarity_metric == 'overlap':
+            if similarity_metric == 'overlap':
                 sim = self.overlap_coefficient(tokenized_facts, tokenized_passage)
             else:
                 raise ValueError(f'Unsupported similarity metric: {similarity_metric}')
@@ -262,7 +183,7 @@ class WordRecallThresholdFactChecker(object):
     def predict(self, fact: str, passages: List[dict]) -> str:
         tokenized_facts = nltk.word_tokenize(fact)
 
-        stem: bool = False # True
+        stem: bool = False
         remove_punctuation : bool = True
         remove_stop_words: bool = False
         similarity_metric: str = 'overlap'
@@ -710,7 +631,7 @@ class EntailmentFactChecker(object):
             # print("throwing away a non supported prediction from the word overlap ", word_overlap_prediction)
             return "NS"
         
-        threshold = 0.70
+        threshold = 0.80
 
         final_assessment = self.get_final_assessment2(fact, passages, support_threshold=threshold)
         return final_assessment
