@@ -32,7 +32,6 @@ class FactExample:
     def __repr__(self):
         return repr("fact=" + repr(self.fact) + "; label=" + repr(self.label) + "; passages=" + repr(self.passages))
 
-
 class EntailmentModel:
     def __init__(self, model, tokenizer):
         self.model = model
@@ -65,13 +64,16 @@ class EntailmentModel:
 
         with torch.no_grad():
             # Tokenize the premise and hypothesis
-            inputs = self.tokenizer(premise, hypothesis, return_tensors='pt', truncation=True, padding=True)
+            max_token_length = 512
+            inputs = self.tokenizer(premise, hypothesis, return_tensors='pt', truncation=True, padding=True, max_length=max_token_length)
             # Get the model's prediction
             outputs = self.model(**inputs)
             logits = outputs.logits
 
         # convert logits to probs
         probs = torch.nn.functional.softmax(logits, dim=-1)
+        np.set_printoptions(precision=4, suppress=True)
+        # print("Premise: ", premise, " Hypothesis: ", hypothesis, " Probs: ", np.round(probs[0].numpy(), 4))
     
         # To prevent out-of-memory (OOM) issues during autograding, we explicitly delete
         # objects inputs, outputs, logits, and any results that are no longer needed after the computation.
@@ -238,12 +240,12 @@ class EntailmentFactChecker(object):
     def clean_text(self, text: str) -> str:
         # convert to lowercase
         text = text.lower()
-        # replace multiple spaces with a single space
-        text = re.sub(r'\s+', ' ', text)
-        # remove <s> and </s> tags
-        text = re.sub(r'<s>|</s>', '', text)
+        # remove <s> tag
+        text = re.sub(r'<s>', '', text)
+        # remove </s> tag
+        text = re.sub(r'</s>', '', text)
         # remove punctuation
-        text = re.sub(f"[{string.punctuation}]", "", text)
+        # text = re.sub(f"[{string.punctuation}]", "", text)
         return text
 
     def check_fact(self, fact, passages, threshold=0.5, batch_size=16):
@@ -258,7 +260,7 @@ class EntailmentFactChecker(object):
 
         for passage in passages:
             # combine title and text and sentence tokenize
-            full_text = passage['title'] + "." + passage['text']
+            full_text = passage['title'] + " . " + passage['text']
             sentences = nltk.sent_tokenize(full_text)
             total_sentences += len(sentences)
 
@@ -267,32 +269,38 @@ class EntailmentFactChecker(object):
                 batch_sentences = sentences[i:i+batch_size]
                 batch_entailment_probs = [self.ent_model.check_entailment(fact, self.clean_text(s)) for s in batch_sentences]
 
-                for entailment_probs in batch_entailment_probs:
-                    # if there is a contradiction, return "NS"
-                    if entailment_probs[CONTRADICTION_INDEX] > threshold:
-                        contradiction_found = True
-                        break
+                for idx, entailment_probs in enumerate(batch_entailment_probs):
+                    # If there's a contradiction, return "NS"
+                    # if entailment_probs[CONTRADICTION_INDEX] > threshold:
+                    #     contradiction_found = True
+                    #     break
 
-                    # If the result is neutral, increment the neutral_count
-                    if max(entailment_probs) == entailment_probs[NEUTRAL_INDEX]:
-                        neutral_count += 1
+                    # Update the max_entailment_score and store the most entailing sentence
+                    if entailment_probs[ENTAILMENT_INDEX] > max_entailment_score:
+                        max_entailment_score = entailment_probs[ENTAILMENT_INDEX]
+                        most_entailing_sentence = batch_sentences[idx]
 
-                    # update max_entailment_score
-                    max_entailment_score = max(max_entailment_score, entailment_probs[ENTAILMENT_INDEX])
+                    # if contradiction_found:
+                    #     break
 
-                if contradiction_found:
-                    break
-
-            if contradiction_found:
-                break
+            # if contradiction_found:
+            #     break
 
         # if significant majority of sentences are neutral, make a weighted decision
         if (neutral_count / total_sentences) > threshold:
-            return "S" if max_entailment_score > threshold else "NS"
-        elif contradiction_found:
-            return "NS"
+            decision = "S" if max_entailment_score > threshold else "NS"
         else:
-            return "S" if max_entailment_score > threshold else "NS"
+            decision = "S" if max_entailment_score > threshold else "NS"
+
+        # decision = "NS" if contradiction_found else "S" if max_entailment_score > threshold else "NS"
+        return {
+            "decision": decision,
+            "max_entailment_score": max_entailment_score,
+            "most_entailing_sentence": most_entailing_sentence,
+            "entailment_prob": max_entailment_score,
+            "neutral_prob": batch_entailment_probs[0][1],
+            "contradiction_prob": batch_entailment_probs[0][2]
+        }
 
     def predict(self, fact: str, passages: List[dict]) -> str:
         word_overlap_similarity = self.word_recall_fact_checker.evaluate_similarity(fact, passages)
@@ -300,9 +308,11 @@ class EntailmentFactChecker(object):
             return "NS"
         cleaned_fact = self.clean_text(fact)
         
-        threshold=0.75
+        threshold=0.50
         batch_size=4
-        return self.check_fact(cleaned_fact, passages, threshold=threshold, batch_size=batch_size)
+        result = self.check_fact(cleaned_fact, passages, threshold=threshold, batch_size=batch_size)
+
+        return result["decision"]
 
 # OPTIONAL
 class DependencyRecallThresholdFactChecker(object):
