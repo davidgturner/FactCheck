@@ -131,6 +131,8 @@ def print_eval_stats(confusion_mat, gold_label_indexer):
         rec = num_correct / num_gold
         if num_pred > 0:
             prec = num_correct / num_pred
+            if (prec + rec) == 0:
+                break
             f1 = 2 * prec * rec/(prec + rec)
         else:
             prec = "undefined"

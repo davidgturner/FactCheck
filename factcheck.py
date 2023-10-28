@@ -706,7 +706,7 @@ class EntailmentFactChecker(object):
 
         # first use the overlap prediction model, if it doesn't pass that then throw it out
         word_overlap_similarity = self.word_recall_fact_checker.evaluate_similarity(fact, passages)
-        if word_overlap_similarity < 0.50:
+        if word_overlap_similarity < 0.25:
             # print("throwing away a non supported prediction from the word overlap ", word_overlap_prediction)
             return "NS"
         
