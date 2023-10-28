@@ -197,6 +197,68 @@ class WordRecallThresholdFactChecker(object):
         overlap_coefficient = numerator / denominator
         return overlap_coefficient
     
+    def evaluate_similarity(self, fact, passages) -> float:
+        tokenized_facts = nltk.word_tokenize(fact)
+
+        stem: bool = False # True
+        remove_punctuation : bool = True
+        remove_stop_words: bool = False
+        similarity_metric: str = 'overlap'
+        
+        stemmer = nltk.stem.PorterStemmer()
+
+        if remove_punctuation:
+            tokenized_facts = [word for word in tokenized_facts if word not in string.punctuation]
+
+        if stem:
+            tokenized_facts = [stemmer.stem(word) for word in tokenized_facts]
+        
+        stop_words = set(nltk.corpus.stopwords.words('english'))
+
+        if remove_stop_words:
+            tokenized_facts = [word for word in tokenized_facts if word.lower() not in stop_words]
+
+        # Remove Empty Strings
+        tokenized_facts = [word for word in tokenized_facts if word]
+
+        results = []
+        for passage in passages:
+            passage_text = passage['title'] + ' ' + passage['text']
+            tokenized_passage = nltk.word_tokenize(passage_text)
+
+            tokenized_passage = [word for word in tokenized_passage if word]
+
+            if remove_punctuation:
+                tokenized_passage = [word for word in tokenized_passage if word not in string.punctuation]
+
+            if stem:
+                tokenized_passage = [stemmer.stem(word) for word in tokenized_passage]
+        
+            if remove_stop_words:
+                tokenized_passage = [word for word in tokenized_passage if word.lower() not in stop_words]
+        
+            # word frequency vectors
+            word_set = set(tokenized_facts + tokenized_passage)
+            vector1 = [tokenized_facts.count(word) for word in word_set]
+            vector2 = [tokenized_passage.count(word) for word in word_set]
+
+            # similarity calculation
+            if similarity_metric == 'cosine':
+                sim = self.cosine_similarity(vector1, vector2)
+            elif similarity_metric == 'jaccard':
+                sim = self.jaccard_similarity(vector1, vector2)
+            elif similarity_metric == 'overlap':
+                sim = self.overlap_coefficient(tokenized_facts, tokenized_passage)
+            else:
+                raise ValueError(f'Unsupported similarity metric: {similarity_metric}')
+        
+            # add similarity result to results list
+            results.append(sim)
+
+        # compute average similarity score
+        average_similarity = np.average(results) if results else 0
+        return average_similarity
+
     def predict(self, fact: str, passages: List[dict]) -> str:
         tokenized_facts = nltk.word_tokenize(fact)
 
@@ -269,11 +331,233 @@ class WordRecallThresholdFactChecker(object):
 
         return prediction
 
+# class FactChecker:
+
+#     def __init__(self, model, tokenizer, threshold=0.6):
+#         # model_name="MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli"
+#         self.tokenizer = tokenizer # AutoTokenizer.from_pretrained(model_name)
+#         self.model = model # AutoModelForSequenceClassification.from_pretrained(model_name)
+#         self.model.eval()
+#         self.threshold = threshold
+
+#     def get_entailment_score(self, premise, hypothesis):
+#         inputs = self.tokenizer(premise, hypothesis, return_tensors="pt", truncation=True, padding=True, max_length=512)
+#         with torch.no_grad():
+#             outputs = self.model(**inputs)
+#             logits = outputs.logits
+#             probs = torch.nn.functional.softmax(logits, dim=-1)
+#             entailment_label_id = self.model.config.label2id["entailment"]
+#             entailment_prob = probs[0][entailment_label_id].item()
+#             # entailment_prob = probs[0][2].item()  # Assuming the entailment label index is 2
+#         return entailment_prob
+
+#     def is_sentence_entailed(self, document, summary_sentence):
+#         doc_sentences = document.split('.')
+#         max_score = 0
+#         for sent in doc_sentences:
+#             score = self.get_entailment_score(sent, summary_sentence)
+#             if score > max_score:
+#                 max_score = score
+#         print("max score ", max_score)
+#         print("threshold ", self.threshold)
+#         return max_score > self.threshold
+
+#     def is_summary_consistent(self, document, summary, consistency_threshold=0.8):
+#         summary_sentences = summary.split('.')
+#         entailed_sentences = 0
+#         total_sentences = 0
+
+#         for sent in summary_sentences:
+#             if sent.strip():  # Ensure the sentence is not empty
+#                 total_sentences += 1
+#                 if self.is_sentence_entailed(document, sent):
+#                     entailed_sentences += 1
+
+#         return (entailed_sentences / total_sentences) >= consistency_threshold
+    
+#     def get_max_entailment_score(self, document, summary_sentence):
+#         doc_sentences = document.split('.')
+#         max_score = 0
+#         for sent in doc_sentences:
+#             score = self.get_entailment_score(sent, summary_sentence)
+#             if score > max_score:
+#                 max_score = score
+#         return max_score
+
+#     def is_statement_supported_by_passage(self, passage, statement):
+#         passage_sentences = passage.split('.')
+#         max_score = 0
+#         for sent in passage_sentences:
+#             score = self.get_entailment_score(sent, statement)
+#             if score > max_score:
+#                 max_score = score
+#         return max_score > self.threshold
+
+#     def is_fact_supported_by_passages(self, passages, fact):
+#         fact_statements = fact.split('.')
+#         for stmt in fact_statements:
+#             supported = False
+#             for passage_dict in passages:
+#                 passage_text = passage_dict['text']
+#                 if self.is_statement_supported_by_passage(passage_text, stmt):
+#                     supported = True
+#                     break
+#             if not supported:
+#                 return False
+#         return True
+
+# class FactChecker:
+
+#     def __init__(self, model, tokenizer, threshold=0.7):
+#         self.tokenizer = tokenizer
+#         self.model = model
+#         self.model.eval()
+#         self.threshold = threshold
+
+#     def get_entailment_scores(self, premises, hypothesis):
+#         inputs = self.tokenizer(premises, [hypothesis for _ in premises], return_tensors="pt", truncation=True, padding='longest', max_length=512)
+#         with torch.no_grad():
+#             outputs = self.model(**inputs)
+#             logits = outputs.logits
+#             probs = torch.nn.functional.softmax(logits, dim=-1)
+#             entailment_label_id = self.model.config.label2id["entailment"]
+#             entailment_probs = probs[:, entailment_label_id].tolist()
+#         return entailment_probs
+
+#     def is_sentence_entailed(self, doc_sentences, summary_sentence):
+#         scores = self.get_entailment_scores(doc_sentences, summary_sentence)
+#         max_score = max(scores)
+#         return max_score > self.threshold
+
+#     def is_summary_consistent(self, doc_sentences, summary_sentences, consistency_threshold=0.7):
+#         entailed_sentences = sum([self.is_sentence_entailed(doc_sentences, sent) for sent in summary_sentences if sent.strip()])
+#         return (entailed_sentences / len(summary_sentences)) >= consistency_threshold
+
+#     def is_fact_supported_by_passages(self, passages, fact_statements):
+#         # Pre-split passages into sentences
+#         all_passage_sentences = [passage_dict['text'].split('.') for passage_dict in passages]
+        
+#         for stmt in fact_statements:
+#             supported = False
+#             for passage_sentences in all_passage_sentences:
+#                 if self.is_sentence_entailed(passage_sentences, stmt):
+#                     supported = True
+#                     break
+#             if not supported:
+#                 return False
+#         return True
+
+class MyFactChecker:
+
+    def __init__(self, model, tokenizer, threshold=0.5):
+        self.tokenizer = tokenizer
+        self.model = model
+        self.model.eval()
+        self.threshold = threshold
+
+    def clean_text(self, text: str) -> str:
+        text = text.lower()  # Convert to lowercase
+        text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces with a single space
+        text = text.replace("</s>", "")
+        text = text.replace("<s>", "")
+        return text
+
+    def get_entailment_scores(self, premise, hypothesis):
+        inputs = self.tokenizer(premise, hypothesis, return_tensors="pt", truncation=True, padding=True)
+
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+            logits = outputs.logits
+            probs = torch.nn.functional.softmax(logits, dim=-1)
+            max_prob, max_label = torch.max(probs, dim=1)
+            max_label_str = self.model.config.id2label[max_label.item()]
+        return max_label_str, max_prob.item()
+
+    def is_sentence_entailed(self, doc_sentence, summary_sentence):
+        label, score = self.get_entailment_scores(doc_sentence, summary_sentence)
+        return label == "entailment" and score > self.threshold
+
+    def is_summary_consistent(self, doc_sentences, summary_sentences, consistency_threshold=0.5):
+        entailed_sentences = sum([self.is_sentence_entailed(doc_sentence, sent) for doc_sentence in doc_sentences for sent in summary_sentences if sent.strip()])
+        return (entailed_sentences / len(summary_sentences)) >= consistency_threshold
+
+    def is_fact_supported_by_passages(self, passages, fact_statements):
+        # Clean and pre-split passages into sentences
+        all_passage_sentences = [self.clean_text(passage_dict['text']).split('.') for passage_dict in passages]
+        
+        cleaned_fact_statements = [self.clean_text(stmt) for stmt in fact_statements]
+        
+        for stmt in cleaned_fact_statements:
+            supported = False
+            for passage_sentences in all_passage_sentences:
+                for passage_sentence in passage_sentences:
+                    if self.is_sentence_entailed(passage_sentence, stmt):
+                        supported = True
+                        break
+                if supported:
+                    break
+            if not supported:
+                return False
+        return True
+
+    
+class SummaCEntailment:
+    def __init__(self, model_name="MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli", threshold=0.6):
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
+        self.model.eval()
+        self.threshold = threshold
+
+    def get_entailment_score(self, premise, hypothesis):
+        inputs = self.tokenizer(premise, hypothesis, return_tensors="pt", truncation=True, padding=True, max_length=512)
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+            logits = outputs.logits
+            probs = torch.nn.functional.softmax(logits, dim=-1)
+            entailment_prob = probs[0][2].item()  # Assuming the entailment label index is 2
+        return entailment_prob
+
+    def is_sentence_entailed(self, document, summary_sentence):
+        doc_sentences = document.split('.')
+        max_score = 0
+        for sent in doc_sentences:
+            score = self.get_entailment_score(sent, summary_sentence)
+            if score > max_score:
+                max_score = score
+        print("max score ", max_score)
+        print("threshold ", self.threshold)
+        return max_score > self.threshold
+
+    def is_summary_consistent(self, document, summary, consistency_threshold=0.8):
+        summary_sentences = summary.split('.')
+        entailed_sentences = 0
+        total_sentences = 0
+
+        for sent in summary_sentences:
+            if sent.strip():  # Ensure the sentence is not empty
+                total_sentences += 1
+                if self.is_sentence_entailed(document, sent):
+                    entailed_sentences += 1
+
+        return (entailed_sentences / total_sentences) >= consistency_threshold
+
+    
+    def get_max_entailment_score(self, document, summary_sentence):
+        doc_sentences = document.split('.')
+        max_score = 0
+        for sent in doc_sentences:
+            score = self.get_entailment_score(sent, summary_sentence)
+            if score > max_score:
+                max_score = score
+        return max_score
+
+
 class EntailmentFactChecker(object):
     def __init__(self, ent_model):
         # print("model that is being passed in here is: ", type(ent_model))
         self.ent_model : EntailmentModel = ent_model
         self.word_recall_fact_checker = WordRecallThresholdFactChecker()
+        self.checker = MyFactChecker(self.ent_model.model, self.ent_model.tokenizer, threshold=0.70)
 
         # self.tokenizer = AutoTokenizer.from_pretrained("MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli")
         # model = AutoModelForSequenceClassification.from_pretrained("MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli")
@@ -420,9 +704,25 @@ class EntailmentFactChecker(object):
 
     def predict(self, fact: str, passages: List[dict]) -> str:
 
+        # first use the overlap prediction model, if it doesn't pass that then throw it out
+        word_overlap_similarity = self.word_recall_fact_checker.evaluate_similarity(fact, passages)
+        if word_overlap_similarity < 0.50:
+            # print("throwing away a non supported prediction from the word overlap ", word_overlap_prediction)
+            return "NS"
+        
         threshold = 0.70
-        return self.get_final_assessment2(fact, passages, support_threshold=threshold)
+
+        final_assessment = self.get_final_assessment2(fact, passages, support_threshold=threshold)
+        return final_assessment
     
+        # result = self.checker.is_fact_supported_by_passages(passages, fact)
+        # print(f"The fact is {'supported' if result else 'not supported'} by the passages.")
+
+        if final_assessment == result and result == "NS":
+            return "NS"
+        else:
+            return "S"
+
         cleaned_fact = self.clean_text(fact)
         predictions = []
         

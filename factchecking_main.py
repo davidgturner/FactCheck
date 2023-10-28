@@ -1,12 +1,14 @@
 # factscore_retrieval_interface.py
 
 import json
+import random
 import sys
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from typing import List, Dict
 from tqdm import tqdm
 import argparse
 from factcheck import *
+from factcheck import AlwaysEntailedFactChecker, DependencyRecallThresholdFactChecker, RandomGuessFactChecker
 
 
 def _parse_args():
@@ -82,21 +84,30 @@ def predict_two_classes(examples: List[FactExample], fact_checker):
     confusion_mat = [[0, 0], [0, 0]]
     ex_count = 0
 
-    for i, example in enumerate(tqdm(examples)):
-        converted_label = "NS" if example.label == 'IR' else example.label
-        gold_label = gold_label_indexer.index(converted_label)
+    random.shuffle(examples)
 
-        raw_pred = fact_checker.predict(example.fact, example.passages)
-        pred_label = gold_label_indexer.index(raw_pred)
+    with open('incorrect_classifications.txt', 'w', encoding='utf-8') as file:
+        for i, example in enumerate(tqdm(examples)):
+            converted_label = "NS" if example.label == 'IR' else example.label
+            gold_label = gold_label_indexer.index(converted_label)
 
-        # print("Gold Label: ", converted_label)
-        # print("raw_pred: ", raw_pred)
-        # if converted_label != raw_pred:
-        #     print("Gold truth: ", converted_label, " Prediction: ", raw_pred, "Fact: ", example.fact, " Passages: ", example.passages)
-        #     sys.exit()
-           
-        confusion_mat[gold_label][pred_label] += 1
-        ex_count += 1
+            raw_pred = fact_checker.predict(example.fact, example.passages)
+            pred_label = gold_label_indexer.index(raw_pred)
+
+            # print("Gold Label: ", converted_label)
+            # print("raw_pred: ", raw_pred)
+            if converted_label != raw_pred:
+                #print("Gold truth: ", converted_label, " Prediction: ", raw_pred, "Fact: ", example.fact, " Passages: ", example.passages)
+                # Write the incorrect classification to the file
+                file.write(f"Gold truth: {converted_label}, Prediction: {raw_pred}, Fact: {example.fact}, Passages: {example.passages}\n")
+                file.write(f"Gold truth: {converted_label}, Prediction: {raw_pred}, Clean Fact: {fact_checker.clean_text(example.fact)}, clean Passages: {[fact_checker.clean_text(passage_dict['text']) for passage_dict in example.passages]}\n\n")
+                file.flush()
+
+            confusion_mat[gold_label][pred_label] += 1
+            ex_count += 1
+
+            print_eval_stats(confusion_mat, gold_label_indexer)
+
     return print_eval_stats(confusion_mat, gold_label_indexer)
 
 
@@ -115,6 +126,8 @@ def print_eval_stats(confusion_mat, gold_label_indexer):
         num_correct = confusion_mat[idx][idx]
         num_gold = sum([confusion_mat[idx][i] for i in range(0, len(gold_label_indexer))])
         num_pred = sum([confusion_mat[i][idx] for i in range(0, len(gold_label_indexer))])
+        if num_gold == 0:
+            continue
         rec = num_correct / num_gold
         if num_pred > 0:
             prec = num_correct / num_pred
@@ -179,6 +192,9 @@ if __name__=="__main__":
     # # Identify the threshold with the highest accuracy
     # best_threshold = max(results, key=results.get)
     # print(f"\nBest Threshold: {best_threshold:.2f}, Accuracy: {results[best_threshold]:.2f}")
-    # examples = examples[:50]
+    # examples = examples[:25]
+
+    # np.random.choice(examples, size=20, replace=False)
+
     # for threshold in 
     accuracy = predict_two_classes(examples, fact_checker)
