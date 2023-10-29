@@ -149,4 +149,8 @@ if __name__=="__main__":
     else:
         raise NotImplementedError
 
+    #examples = examples[:10]
+    import random
+    examples = random.sample(examples, 10)
+
     predict_two_classes(examples, fact_checker)

@@ -2,6 +2,7 @@
 
 import re
 import string
+import time
 import torch
 import numpy as np
 import spacy
@@ -10,6 +11,7 @@ import gc
 import nltk
 from typing import List, Dict
 
+from transformers import AutoConfig
 
 nltk.download('stopwords')
 nltk.download('punkt')
@@ -36,7 +38,8 @@ class EntailmentModel:
     def __init__(self, model, tokenizer):
         self.model = model
         self.tokenizer = tokenizer
-        self.label_mapping = {0: 'entailment', 1: 'neutral', 2: 'contradiction'}
+        config = AutoConfig.from_pretrained(self.model.config.name_or_path)
+        self.label_mapping = config.id2label
 
     def classify_entailment(self, probabilities, threshold=0.5):
         probabilities = {
@@ -59,7 +62,6 @@ class EntailmentModel:
         return labels[class_id]        
 
     def check_entailment(self, premise: str, hypothesis: str):
-        # Ensure model is in evaluation mode
         self.model.eval()
 
         with torch.no_grad():
@@ -239,7 +241,7 @@ class EntailmentFactChecker(object):
 
     def clean_text(self, text: str) -> str:
         # convert to lowercase
-        text = text.lower()
+        # text = text.lower()
         # remove <s> tag
         text = re.sub(r'<s>', '', text)
         # remove </s> tag
@@ -250,56 +252,41 @@ class EntailmentFactChecker(object):
 
     def check_fact(self, fact, passages, threshold=0.5, batch_size=16):
         max_entailment_score = 0.0
-        contradiction_found = False
-        neutral_count = 0
-        total_sentences = 0
+        total_token_batches = 0
 
         ENTAILMENT_INDEX = 0
-        NEUTRAL_INDEX = 1
-        CONTRADICTION_INDEX = 2
+        max_length = 512
+        most_entailing_probs = [0, 0, 0]  # Initialize to a default value
 
         for passage in passages:
-            # combine title and text and sentence tokenize
+            # combine title and text
             full_text = passage['title'] + " . " + passage['text']
-            sentences = nltk.sent_tokenize(full_text)
-            total_sentences += len(sentences)
+            
+            # Tokenize the text into subwords/chunks
+            tokens = self.ent_model.tokenizer.tokenize(full_text)
+            
+            # Split the tokens into batches of max_length
+            token_batches = [tokens[i:i+max_length] for i in range(0, len(tokens), max_length)]
+            for token_batch in token_batches:
+                batch_text = self.ent_model.tokenizer.convert_tokens_to_string(token_batch)
+                entailment_probs = self.ent_model.check_entailment(fact, self.clean_text(batch_text))
 
-            # batch processing over the sentences
-            for i in range(0, len(sentences), batch_size):
-                batch_sentences = sentences[i:i+batch_size]
-                batch_entailment_probs = [self.ent_model.check_entailment(fact, self.clean_text(s)) for s in batch_sentences]
-
-                for idx, entailment_probs in enumerate(batch_entailment_probs):
-                    # If there's a contradiction, return "NS"
-                    # if entailment_probs[CONTRADICTION_INDEX] > threshold:
-                    #     contradiction_found = True
-                    #     break
-
-                    # Update the max_entailment_score and store the most entailing sentence
-                    if entailment_probs[ENTAILMENT_INDEX] > max_entailment_score:
-                        max_entailment_score = entailment_probs[ENTAILMENT_INDEX]
-                        most_entailing_sentence = batch_sentences[idx]
-
-                    # if contradiction_found:
-                    #     break
-
-            # if contradiction_found:
-            #     break
+                # Update the max_entailment_score and store the most entailing sentence
+                if entailment_probs[ENTAILMENT_INDEX] > max_entailment_score:
+                    max_entailment_score = entailment_probs[ENTAILMENT_INDEX]
+                    most_entailing_sentence = batch_text
+                    most_entailing_probs = entailment_probs  # Store the probabilities for the most entailing sentence
 
         # if significant majority of sentences are neutral, make a weighted decision
-        if (neutral_count / total_sentences) > threshold:
-            decision = "S" if max_entailment_score > threshold else "NS"
-        else:
-            decision = "S" if max_entailment_score > threshold else "NS"
+        decision = "S" if max_entailment_score > threshold else "NS"
 
-        # decision = "NS" if contradiction_found else "S" if max_entailment_score > threshold else "NS"
         return {
             "decision": decision,
             "max_entailment_score": max_entailment_score,
             "most_entailing_sentence": most_entailing_sentence,
-            "entailment_prob": max_entailment_score,
-            "neutral_prob": batch_entailment_probs[0][1],
-            "contradiction_prob": batch_entailment_probs[0][2]
+            "entailment_prob": most_entailing_probs[0],
+            "neutral_prob": most_entailing_probs[1],
+            "contradiction_prob": most_entailing_probs[2]
         }
 
     def predict(self, fact: str, passages: List[dict]) -> str:
@@ -308,9 +295,14 @@ class EntailmentFactChecker(object):
             return "NS"
         cleaned_fact = self.clean_text(fact)
         
-        threshold=0.50
-        batch_size=4
+        threshold=0.80
+        batch_size=1
+
+        #start_time = time.time()
         result = self.check_fact(cleaned_fact, passages, threshold=threshold, batch_size=batch_size)
+        #end_time = time.time()
+        #elapsed_time = end_time - start_time
+        #print("clean_fact elapsed time: ", elapsed_time)
 
         return result["decision"]
 
