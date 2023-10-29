@@ -149,8 +149,11 @@ if __name__=="__main__":
     else:
         raise NotImplementedError
 
-    #examples = examples[:10]
+    examples_1 = examples[:20]
     import random
-    examples = random.sample(examples, 10)
+    random_sample = random.sample(examples, 20)
+    combined = examples_1 + random_sample
+    # print("using the combined of size: ", len(combined))
+    examples = combined
 
     predict_two_classes(examples, fact_checker)
