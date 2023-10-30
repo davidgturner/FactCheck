@@ -83,6 +83,9 @@ def predict_two_classes(examples: List[FactExample], fact_checker):
         raw_pred = fact_checker.predict(example.fact, example.passages)
         pred_label = gold_label_indexer.index(raw_pred)
 
+        if pred_label != gold_label:
+            print("incorrect: example.fact: ", example.fact, " gold label ", converted_label, " pred label ", raw_pred)
+
         confusion_mat[gold_label][pred_label] += 1
         ex_count += 1
     print_eval_stats(confusion_mat, gold_label_indexer)
@@ -149,11 +152,11 @@ if __name__=="__main__":
     else:
         raise NotImplementedError
 
-    examples_1 = examples[:20]
-    import random
-    random_sample = random.sample(examples, 20)
-    combined = examples_1 + random_sample
-    # print("using the combined of size: ", len(combined))
-    examples = combined
+    # # examples = examples[:20]
+    # import random
+    # examples = random.sample(examples, 35)
+    # # combined = examples_1 + random_sample
+    # # # print("using the combined of size: ", len(combined))
+    # # examples = combined
 
     predict_two_classes(examples, fact_checker)
