@@ -174,9 +174,27 @@ class EntailmentFactChecker(object):
         self.ent_model : EntailmentModel = ent_model
         self.word_recall_fact_checker = WordRecallThresholdFactChecker()
 
+    # def clean_text(self, text: str) -> str:
+    #     text = text.encode("utf-8", "ignore").decode("utf-8")  # handle Unicode characters
+    #     text = re.sub(r'\.""', '".', text)  # replace `.""` with `".`
+    #     cleaned_text = re.sub(r'\s+', ' ', text).strip()
+    #     return cleaned_text
+
     def clean_text(self, text: str) -> str:
-        text = re.sub(r'\s+', ' ', text).strip()
-        return text
+        text = text.encode("utf-8", "ignore").decode("utf-8")  # handle Unicode characters
+        #text = re.sub(r'\.""', '".', text)  # replace `.""` with `".`
+
+        # Remove <s> and </s> tokens
+        #text = text.replace('<s>', '').replace('</s>', '')
+        # Tokenize the text
+        tokens = self.ent_model.tokenizer.tokenize(text)
+        # Reconstruct the text from tokens, replacing [UNK] with space
+        cleaned_text = ' '.join([token if token != '[UNK]' else ' ' for token in tokens])
+        # Convert tokens back to string
+        cleaned_text = self.ent_model.tokenizer.convert_tokens_to_string(cleaned_text.split())
+        # Remove any extra spaces
+        cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
+        return cleaned_text
 
     def check_fact(self, fact, passages, threshold=0.5, max_length=512, overlap=50):
         max_entailment_score = 0.0
@@ -190,7 +208,7 @@ class EntailmentFactChecker(object):
         def chunk_text(text, tokenizer, max_length):
             tokens = tokenizer.tokenize(text)
             
-            # Split the tokens into chunks of max_length
+            # split tokens into chunks of max_length
             chunks = [tokens[i:i+max_length] for i in range(0, len(tokens), max_length)]
             
             return [tokenizer.convert_tokens_to_string(chunk) for chunk in chunks]
@@ -215,11 +233,11 @@ class EntailmentFactChecker(object):
             passage_decision = "S" if max_entailment_score > threshold else "NS"
             passage_results.append(passage_decision)
 
-        decision_a = "S" if max_entailment_score > threshold else "NS"
+        #decision_a = "S" if max_entailment_score > threshold else "NS"
         decision_b = "S" if passage_results.count("S") >= passage_results.count("NS") else "NS"
         decision_c = "S" if passage_results.count("S") > 0 else "NS"
 
-        decisions = [decision_a, decision_b, decision_c]
+        decisions = [decision_b, decision_c]
         decision = "S" if decisions.count("S") > decisions.count("NS") else "NS"
 
         return {
@@ -231,13 +249,13 @@ class EntailmentFactChecker(object):
 
     def predict(self, fact: str, passages: List[dict]) -> str:
         word_overlap_similarity = self.word_recall_fact_checker.evaluate_similarity(fact, passages)
-        if word_overlap_similarity > 0.60:
-            return "S"
-        if word_overlap_similarity < 0.10:
+        # if word_overlap_similarity > 0.70:
+        #     return "S"
+        if word_overlap_similarity < 0.25:
             return "NS"
         
         threshold = 0.50
-        overlap = 25 # 50
+        overlap = 25
         cleaned_fact = self.clean_text(fact)
         result = self.check_fact(cleaned_fact, passages, threshold=threshold, overlap=overlap)
 

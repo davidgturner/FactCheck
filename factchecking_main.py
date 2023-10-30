@@ -7,6 +7,8 @@ from tqdm import tqdm
 import argparse
 from factcheck import *
 
+import csv
+from tqdm import tqdm
 
 def _parse_args():
     parser = argparse.ArgumentParser()
@@ -76,18 +78,42 @@ def predict_two_classes(examples: List[FactExample], fact_checker):
     confusion_mat = [[0, 0], [0, 0]]
     ex_count = 0
 
-    for i, example in enumerate(tqdm(examples)):
-        converted_label = "NS" if example.label == 'IR' else example.label
-        gold_label = gold_label_indexer.index(converted_label)
+    # Setup CSV file
+    with open('results.csv', 'w', newline='') as csvfile:
+        fieldnames = ['Fact', 'Clean Fact', '# of Total Passages', '# of Passage with S', '# of Passage with NS', 'Golden Label', 'Prediction Label', 'Correct?']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
 
-        raw_pred = fact_checker.predict(example.fact, example.passages)
-        pred_label = gold_label_indexer.index(raw_pred)
+        for i, example in enumerate(tqdm(examples)):
+            converted_label = "NS" if example.label == 'IR' else example.label
+            gold_label = gold_label_indexer.index(converted_label)
 
-        if pred_label != gold_label:
-            print("incorrect: example.fact: ", example.fact, " gold label ", converted_label, " pred label ", raw_pred)
+            raw_pred = fact_checker.predict(example.fact, example.passages)
+            pred_label = gold_label_indexer.index(raw_pred)
 
-        confusion_mat[gold_label][pred_label] += 1
-        ex_count += 1
+            #if pred_label != gold_label:
+            #    print("incorrect: example.fact: ", example.fact, " gold label ", converted_label, " pred label ", raw_pred)
+
+            # Compute the desired metrics
+            total_passages = len(example.passages)
+            passages_with_s = sum(1 for p in example.passages if 'S' in p)
+            passages_with_ns = total_passages - passages_with_s
+            correct = 'Y' if pred_label == gold_label else 'N'
+
+            # Write to CSV
+            writer.writerow({
+                'Fact': example.fact,
+                'Clean Fact': fact_checker.clean_text(example.fact),
+                '# of Total Passages': total_passages,
+                '# of Passage with S': passages_with_s,
+                '# of Passage with NS': passages_with_ns,
+                'Golden Label': converted_label,
+                'Prediction Label': raw_pred,
+                'Correct?': correct
+            })
+
+            confusion_mat[gold_label][pred_label] += 1
+            ex_count += 1
     print_eval_stats(confusion_mat, gold_label_indexer)
 
 
@@ -107,9 +133,14 @@ def print_eval_stats(confusion_mat, gold_label_indexer):
         num_gold = sum([confusion_mat[idx][i] for i in range(0, len(gold_label_indexer))])
         num_pred = sum([confusion_mat[i][idx] for i in range(0, len(gold_label_indexer))])
         rec = num_correct / num_gold
+
         if num_pred > 0:
             prec = num_correct / num_pred
-            f1 = 2 * prec * rec/(prec + rec)
+            if (prec + rec) > 0:
+                f1 = 2 * prec * rec/(prec + rec)
+            else:
+                f1 = "undefined"
+                prec = "undefined"
         else:
             prec = "undefined"
             f1 = "undefined"
@@ -152,9 +183,9 @@ if __name__=="__main__":
     else:
         raise NotImplementedError
 
-    # # examples = examples[:20]
-    # import random
-    # examples = random.sample(examples, 35)
+    #examples = examples[:20]
+    import random
+    examples = random.sample(examples, 10)
     # # combined = examples_1 + random_sample
     # # # print("using the combined of size: ", len(combined))
     # # examples = combined

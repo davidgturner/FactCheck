@@ -1,0 +1,11 @@
+Fact,# of Total Passages,# of Passage with S,# of Passage with NS,Golden Label,Prediction Label,Correct?
+Jidenna's music is a fusion of R&B.,5,0,5,NS,NS,Y
+Nisar Ahmad Kakru was a prominent scholar.,3,0,3,NS,NS,Y
+"She passed away on June 27, 2020.",3,0,3,NS,NS,Y
+She passed away at the age of 79.,3,0,3,NS,NS,Y
+"""Save the Last Dance for Me."" is popular.",5,0,5,S,NS,N
+Ji Sung is South Korean.,5,0,5,S,NS,N
+Jean Daullé was born in 1703.,4,0,4,S,NS,N
+Gerhard Fischer is an entrepreneur.,2,0,2,S,S,Y
+Fernandinho has earned over 50 caps.,2,0,2,NS,NS,Y
+Katsu has written novels.,3,0,3,S,NS,N
