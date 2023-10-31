@@ -174,27 +174,26 @@ class EntailmentFactChecker(object):
         self.ent_model : EntailmentModel = ent_model
         self.word_recall_fact_checker = WordRecallThresholdFactChecker()
 
-    # def clean_text(self, text: str) -> str:
-    #     text = text.encode("utf-8", "ignore").decode("utf-8")  # handle Unicode characters
-    #     text = re.sub(r'\.""', '".', text)  # replace `.""` with `".`
-    #     cleaned_text = re.sub(r'\s+', ' ', text).strip()
-    #     return cleaned_text
-
     def clean_text(self, text: str) -> str:
-        text = text.encode("utf-8", "ignore").decode("utf-8")  # handle Unicode characters
-        #text = re.sub(r'\.""', '".', text)  # replace `.""` with `".`
+        return self.clean_text_2(text)
 
-        # Remove <s> and </s> tokens
-        #text = text.replace('<s>', '').replace('</s>', '')
-        # Tokenize the text
-        tokens = self.ent_model.tokenizer.tokenize(text)
-        # Reconstruct the text from tokens, replacing [UNK] with space
-        cleaned_text = ' '.join([token if token != '[UNK]' else ' ' for token in tokens])
-        # Convert tokens back to string
-        cleaned_text = self.ent_model.tokenizer.convert_tokens_to_string(cleaned_text.split())
-        # Remove any extra spaces
-        cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
-        return cleaned_text
+    def clean_text_1(self, text: str) -> str:
+        text = text.encode("ascii", "ignore").decode()  # Remove non-ASCII characters
+        text = re.sub(r'\.""', '".', text)  # Replace `.""` with `".`
+        return re.sub(r'\s+', ' ', text).strip()
+
+    def clean_text_2(self, text: str) -> str:
+        text = self.clean_text_1(text)
+        # tokens = self.ent_model.tokenizer.tokenize(text)
+        # cleaned_text = ' '.join([token if token != '[UNK]' else ' ' for token in tokens])
+        # cleaned_text = self.ent_model.tokenizer.convert_tokens_to_string(cleaned_text.split())
+        # return re.sub(r'\s+', ' ', cleaned_text).strip()
+        return text
+
+    def chunk_text(self, text, tokenizer, max_length, overlap):
+        tokens = tokenizer.tokenize(text)
+        chunks = [tokens[i:i+max_length] for i in range(0, len(tokens), max_length-overlap)]
+        return [tokenizer.convert_tokens_to_string(chunk) for chunk in chunks]
 
     def check_fact(self, fact, passages, threshold=0.5, max_length=512, overlap=50):
         max_entailment_score = 0.0
@@ -203,19 +202,22 @@ class EntailmentFactChecker(object):
         CONTRADICTION_INDEX = 2
         most_entailing_sentence = ""
         most_contradicting_sentence = ""
-        passage_results = []
 
-        def chunk_text(text, tokenizer, max_length):
-            tokens = tokenizer.tokenize(text)
-            
-            # split tokens into chunks of max_length
-            chunks = [tokens[i:i+max_length] for i in range(0, len(tokens), max_length)]
-            
-            return [tokenizer.convert_tokens_to_string(chunk) for chunk in chunks]
+        most_entailing_probs = [0.0, 0.0, 0.0]
+        most_contradicting_probs = [0.0, 0.0, 0.0]
+
+        passage_results = []
+        whole_passage_results = []
 
         for passage in passages:
             full_text = passage['title'] + "." + passage['text']
-            chunks = chunk_text(full_text, self.ent_model.tokenizer, max_length)
+            whole_entailment_probs = self.ent_model.check_entailment(fact, self.clean_text(full_text))
+            passage_decision = "S" if whole_entailment_probs[ENTAILMENT_INDEX] > whole_entailment_probs[1] and whole_entailment_probs[ENTAILMENT_INDEX] > whole_entailment_probs[CONTRADICTION_INDEX] else "NS"
+            #whole_passage_results.append(passage_decision)
+            if passage_decision == "S":
+                return passage_decision
+
+            chunks = self.chunk_text(full_text, self.ent_model.tokenizer, max_length, overlap)
 
             for chunk in chunks:
                 entailment_probs = self.ent_model.check_entailment(fact, self.clean_text(chunk))
@@ -233,12 +235,14 @@ class EntailmentFactChecker(object):
             passage_decision = "S" if max_entailment_score > threshold else "NS"
             passage_results.append(passage_decision)
 
-        #decision_a = "S" if max_entailment_score > threshold else "NS"
+        decision_a = "S" if whole_passage_results.count("S") >= whole_passage_results.count("NS") else "NS"
         decision_b = "S" if passage_results.count("S") >= passage_results.count("NS") else "NS"
         decision_c = "S" if passage_results.count("S") > 0 else "NS"
+        decision_d = "S" if most_entailing_probs[ENTAILMENT_INDEX] > most_contradicting_probs[CONTRADICTION_INDEX] else "NS"
 
-        decisions = [decision_b, decision_c]
-        decision = "S" if decisions.count("S") > decisions.count("NS") else "NS"
+        decisions = [decision_a, decision_b, decision_c, decision_d]
+
+        decision = "S" if decisions.count("S") > decisions.count("NS") or decisions.count("S") > 0 else "NS"
 
         return {
             "decision": decision,
@@ -247,19 +251,63 @@ class EntailmentFactChecker(object):
             "most_contradicting_sentence": most_contradicting_sentence
         }
 
+    # def check_fact_whole_passage(self, fact, passages, threshold=0.5, max_length=512, overlap=50):
+    #     max_entailment_score = 0.0
+    #     max_contradiction_score = 0.0
+    #     ENTAILMENT_INDEX = 0
+    #     CONTRADICTION_INDEX = 2
+    #     most_entailing_sentence = ""
+    #     most_contradicting_sentence = ""
+    #     passage_results = []
+
+    #     for passage in passages:
+    #         full_text = passage['title'] + "." + passage['text']
+
+    #         entailment_probs = self.ent_model.check_entailment(fact, self.clean_text(full_text))
+
+    #         if entailment_probs[ENTAILMENT_INDEX] > max_entailment_score:
+    #             max_entailment_score = entailment_probs[ENTAILMENT_INDEX]
+    #             most_entailing_sentence = full_text
+    #             most_entailing_probs = entailment_probs
+
+    #         if entailment_probs[CONTRADICTION_INDEX] > max_contradiction_score:
+    #             max_contradiction_score = entailment_probs[CONTRADICTION_INDEX]
+    #             most_contradicting_sentence = full_text
+    #             most_contradicting_probs = entailment_probs
+
+    #         # passage_decision = "S" if max_entailment_score > threshold else "NS"
+    #         passage_decision = "S" if max_entailment_score > max_contradiction_score else "NS"
+    #         passage_results.append(passage_decision)
+
+    #     decision_b = "S" if passage_results.count("S") > passage_results.count("NS") else "NS"
+    #     decision_c = "S" if passage_results.count("S") > 0 else "NS"
+
+    #     decisions = [decision_b, decision_c]
+    #     decision = "S" if decisions.count("S") > decisions.count("NS") else "NS"
+
+    #     return {
+    #         "decision": decision,
+    #         "max_entailment_score": max_entailment_score,
+    #         "max_contradiction_score": max_contradiction_score,
+    #         "most_entailing_sentence": most_entailing_sentence,
+    #         "most_contradicting_sentence": most_contradicting_sentence
+    #     }
+
     def predict(self, fact: str, passages: List[dict]) -> str:
         word_overlap_similarity = self.word_recall_fact_checker.evaluate_similarity(fact, passages)
-        # if word_overlap_similarity > 0.70:
-        #     return "S"
         if word_overlap_similarity < 0.25:
             return "NS"
         
-        threshold = 0.50
-        overlap = 25
+        threshold = 0.60
         cleaned_fact = self.clean_text(fact)
-        result = self.check_fact(cleaned_fact, passages, threshold=threshold, overlap=overlap)
 
-        return result["decision"]
+        max_length = 512
+        overlap = 10 # 20 # 10 # 50
+
+        result_c = self.check_fact(cleaned_fact, passages, threshold=threshold, max_length=max_length, overlap=overlap)
+        decision_c = result_c["decision"]
+
+        return decision_c
 
 # OPTIONAL
 class DependencyRecallThresholdFactChecker(object):

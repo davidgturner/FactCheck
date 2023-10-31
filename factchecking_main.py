@@ -184,8 +184,8 @@ if __name__=="__main__":
         raise NotImplementedError
 
     #examples = examples[:20]
-    import random
-    examples = random.sample(examples, 10)
+    #import random
+    #examples = random.sample(examples, 20)
     # # combined = examples_1 + random_sample
     # # # print("using the combined of size: ", len(combined))
     # # examples = combined

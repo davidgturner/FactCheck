@@ -1,0 +1,41 @@
+Fact,Clean Fact,# of Total Passages,# of Passage with S,# of Passage with NS,Golden Label,Prediction Label,Correct?
+She has supported The National Foundation for Autism Research.,She has supported The National Foundation for Autism Research.,5,0,5,NS,NS,Y
+They divorced in 1964.,They divorced in 1964.,3,0,3,S,NS,N
+Jessica Barboza is Venezuelan.,Jessica Barboza is Venezuelan.,2,0,2,S,NS,N
+She appeared in Just Cause.,She appeared in Just Cause.,3,0,3,S,NS,N
+He has worked at Google.,He has worked at Google.,2,0,2,NS,NS,Y
+"""Save the Last Dance for Me."" is popular.","""Save the Last Dance for Me."" is popular.",5,0,5,S,NS,N
+Don Featherstone was an American.,Don Featherstone was an American.,3,0,3,S,NS,N
+Jonathan Haagensen was born in Rio de Janeiro.,Jonathan Haagensen was born in Rio de Janeiro.,3,0,3,S,NS,N
+He often incorporates African elements into his fashion.,He often incorporates African elements into his fashion.,5,0,5,S,NS,N
+"He has since then starred in ""Kill Me, Heal Me."".","He has since then starred in ""Kill Me, Heal Me."".",5,0,5,S,NS,N
+Kerser is an Australian.,Kerser is an Australian.,4,0,4,S,NS,N
+"Marianne McAndrew was born on November 21, 1942.","Marianne McAndrew was born on November 21, 1942.",2,0,2,NS,NS,Y
+Tusa has been involved in various cultural initiatives.,Tusa has been involved in various cultural initiatives.,2,0,2,NS,S,N
+"He has since then starred in ""Save the Last Dance for Me."".","He has since then starred in ""Save the Last Dance for Me."".",5,0,5,S,NS,N
+The Taker trilogy is a novel by Katsu.,The Taker trilogy is a novel by Katsu.,3,0,3,S,NS,N
+Botak Chin was a communist.,Botak Chin was a communist.,3,0,3,NS,NS,Y
+He grew up in a Christian household.,He grew up in a Christian household.,3,0,3,NS,S,N
+Tusa has worked to promote Palermo as a cultural destination.,Tusa has worked to promote Palermo as a cultural destination.,2,0,2,NS,S,N
+He served as a sniper.,He served as a sniper.,4,0,4,NS,NS,Y
+He has been mayor of Palermo since June 2017.,He has been mayor of Palermo since June 2017.,2,0,2,NS,S,N
+"With CSKA, he won international titles.","With CSKA, he won international titles.",3,0,3,S,NS,N
+Nisar Ahmad Kakru was Kashmiri.,Nisar Ahmad Kakru was Kashmiri.,3,0,3,NS,NS,Y
+Hibo Wardere is a campaigner.,Hibo Wardere is a campaigner.,3,0,3,S,NS,N
+Ji Sung's real name is Kwak Tae Geun.,Ji Sung's real name is Kwak Tae Geun.,5,0,5,S,NS,N
+The Fischer Research Laboratory was founded in 1936.,The Fischer Research Laboratory was founded in 1936.,2,0,2,NS,S,N
+Jessica Barboza is a social media personality.,Jessica Barboza is a social media personality.,2,0,2,NS,NS,Y
+"""Familiar Wife."" is popular.","""Familiar Wife."" is popular.",5,0,5,S,NS,N
+Rennie Fritchie is a Baroness.,Rennie Fritchie is a Baroness.,2,0,2,S,NS,N
+Salazar earned 28 caps for the Peru national team.,Salazar earned 28 caps for the Peru national team.,2,0,2,NS,NS,Y
+"Ji Sung was born on February 27, 1977.","Ji Sung was born on February 27, 1977.",5,0,5,S,NS,N
+Itakura has represented Japan at the Under-23 level.,Itakura has represented Japan at the Under-23 level.,3,0,3,NS,NS,Y
+"He was born on December 5, 1999.","He was born on December 5, 1999.",2,0,2,NS,NS,Y
+Jean Daullé was a printmaker.,Jean Daullé was a printmaker.,4,0,4,NS,NS,Y
+Maracaibo is in Venezuela.,Maracaibo is in Venezuela.,2,0,2,S,NS,N
+Botak Chin is also known as Chin Peng.,Botak Chin is also known as Chin Peng.,3,0,3,NS,NS,Y
+Rennie Fritchie is a public servant.,Rennie Fritchie is a public servant.,2,0,2,S,NS,N
+He currently resides in Nashville.,He currently resides in Nashville.,2,0,2,NS,NS,Y
+Fernandinho has represented the Brazil national team since 2011.,Fernandinho has represented the Brazil national team since 2011.,2,0,2,NS,NS,Y
+Marianne McAndrew is a singer.,Marianne McAndrew is a singer.,2,0,2,NS,NS,Y
+Fernandinho participated in the 2014 FIFA World Cup.,Fernandinho participated in the 2014 FIFA World Cup.,2,0,2,NS,NS,Y
