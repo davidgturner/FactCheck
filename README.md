@@ -9,3 +9,6 @@ fact checking LLMs
 
 ``` python factchecking_main.py --mode random ```
 ``` python factchecking_main.py --mode always_entail  ```
+
+``` python factchecking_main.py --mode word_overlap ```
+``` python factchecking_main.py --mode entailment  ```

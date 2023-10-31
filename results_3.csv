@@ -1,0 +1,11 @@
+Fact,Clean Fact,# of Total Passages,# of Passage with S,# of Passage with NS,Golden Label,Prediction Label,Correct?
+Haagensen later transitioned to film.,Haagensen later transitioned to film.,3,0,3,S,NS,N
+Gerhard Fischer is an entrepreneur.,Gerhard Fischer is an entrepreneur.,2,0,2,S,S,Y
+Salazar played for the Peru national team from 1995.,Salazar played for the Peru national team from 1995.,2,0,2,NS,NS,Y
+He served in the Princess Patricia's Canadian Light Infantry.,He served in the Princess Patricia's Canadian Light Infantry.,4,0,4,S,NS,N
+The Hunger is a novel by Katsu.,The Hunger is a novel by Katsu.,3,0,3,S,NS,N
+Botak Chin led the CPM in the 1940s and 1950s.,Botak Chin led the CPM in the 1940s and 1950s.,3,0,3,NS,NS,Y
+Itakura made his senior debut for the national team in 2019.,Itakura made his senior debut for the national team in 2019.,3,0,3,S,NS,N
+She was born in Maracaibo.,She was born in Maracaibo.,2,0,2,S,NS,N
+Rennie Fritchie is Baroness Fritchie.,Rennie Fritchie is Baroness Fritchie.,2,0,2,S,NS,N
+Florencia Bertotti is a television host.,Florencia Bertotti is a television host.,5,0,5,NS,NS,Y

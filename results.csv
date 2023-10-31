@@ -1,0 +1,222 @@
+Fact,Clean Fact,# of Total Passages,# of Passage with S,# of Passage with NS,Golden Label,Prediction Label,Correct?
+Marianne McAndrew is an American.,Marianne McAndrew is an American.,2,0,2,NS,S,N
+Marianne McAndrew is an actress.,Marianne McAndrew is an actress.,2,0,2,S,S,Y
+Marianne McAndrew is a singer.,Marianne McAndrew is a singer.,2,0,2,NS,S,N
+"Marianne McAndrew was born on November 21, 1942.","Marianne McAndrew was born on November 21, 1942.",2,0,2,NS,S,N
+Marianne McAndrew was born in Cleveland.,Marianne McAndrew was born in Cleveland.,2,0,2,NS,S,N
+Cleveland is in Ohio.,Cleveland is in Ohio.,3,0,3,NS,S,N
+Gerhard Fischer is an inventor.,Gerhard Fischer is an inventor.,2,0,2,S,S,Y
+Gerhard Fischer is an entrepreneur.,Gerhard Fischer is an entrepreneur.,2,0,2,S,S,Y
+Gerhard Fischer is best known for inventing a metal detector.,Gerhard Fischer is best known for inventing a metal detector.,2,0,2,S,S,Y
+"Gerhard Fischer invented the first handheld, battery-operated metal detector.","Gerhard Fischer invented the first handheld, battery-operated metal detector.",2,0,2,S,S,Y
+"Gerhard Fischer invented the first handheld, battery-operated metal detector in 1931.","Gerhard Fischer invented the first handheld, battery-operated metal detector in 1931.",2,0,2,NS,S,N
+He founded the Fischer Research Laboratory.,He founded the Fischer Research Laboratory.,2,0,2,S,S,Y
+The Fischer Research Laboratory was founded in 1936.,The Fischer Research Laboratory was founded in 1936.,2,0,2,NS,S,N
+The Fischer Research Laboratory became one of the world's leading manufacturers of metal detectors.,The Fischer Research Laboratory became one of the world's leading manufacturers of metal detectors.,2,0,2,NS,S,N
+Joey D. Vieira is an American.,Joey D. Vieira is an American.,3,0,3,S,S,Y
+Joey D. Vieira is an actor.,Joey D. Vieira is an actor.,3,0,3,S,S,Y
+Joey D. Vieira is a stunt performer.,Joey D. Vieira is a stunt performer.,3,0,3,NS,S,N
+"Joey D. Vieira was born on July 23, 1937.","Joey D. Vieira was born on July 23, 1937.",3,0,3,NS,S,N
+"Joey D. Vieira was born in California, USA.","Joey D. Vieira was born in California, USA.",3,0,3,NS,S,N
+She transitioned to acting.,She transitioned to acting.,5,0,5,NS,S,N
+She appeared in films.,She appeared in films.,3,0,3,S,S,Y
+She appeared in A Bronx Tale.,She appeared in A Bronx Tale.,3,0,3,S,S,Y
+A Bronx Tale is a film.,A Bronx Tale is a film.,3,0,3,S,S,Y
+A Bronx Tale was released in 1993.,A Bronx Tale was released in 1993.,3,0,3,S,S,Y
+She appeared in Just Cause.,She appeared in Just Cause.,3,0,3,S,S,Y
+Just Cause is a film.,Just Cause is a film.,3,0,3,S,S,Y
+Just Cause was released in 1995.,Just Cause was released in 1995.,3,0,3,S,S,Y
+She appeared in Belly.,She appeared in Belly.,3,0,3,S,S,Y
+Belly is a film.,Belly is a film.,3,0,3,S,S,Y
+Belly was released in 1998.,Belly was released in 1998.,3,0,3,S,S,Y
+He is a member of the Democratic Party.,He is a member of the Democratic Party.,2,0,2,NS,S,N
+He has served as a mayor.,He has served as a mayor.,2,0,2,NS,S,N
+He is the mayor of Palermo.,He is the mayor of Palermo.,2,0,2,NS,S,N
+He has been mayor of Palermo since June 2017.,He has been mayor of Palermo since June 2017.,2,0,2,NS,S,N
+Tusa has been involved in various cultural initiatives.,Tusa has been involved in various cultural initiatives.,2,0,2,NS,S,N
+Tusa has worked to promote Palermo as a cultural destination.,Tusa has worked to promote Palermo as a cultural destination.,2,0,2,NS,S,N
+Jean Daullé was born in 1703.,Jean Daull was born in 1703.,4,0,4,S,S,Y
+Jean Daullé died in 1763.,Jean Daull died in 1763.,4,0,4,S,S,Y
+Jean Daullé was French.,Jean Daull was French.,4,0,4,S,S,Y
+Jean Daullé was an engraver.,Jean Daull was an engraver.,4,0,4,S,S,Y
+Jean Daullé was a printmaker.,Jean Daull was a printmaker.,4,0,4,NS,S,N
+Jean Daullé was known for his portraits.,Jean Daull was known for his portraits.,4,0,4,S,S,Y
+Jean Daullé was known for his religious subjects.,Jean Daull was known for his religious subjects.,4,0,4,NS,S,N
+Fernandinho represents the Brazil national team.,Fernandinho represents the Brazil national team.,2,0,2,NS,NS,Y
+Fernandinho has represented the Brazil national team since 2011.,Fernandinho has represented the Brazil national team since 2011.,2,0,2,NS,NS,Y
+Fernandinho has earned over 50 caps.,Fernandinho has earned over 50 caps.,2,0,2,NS,NS,Y
+Fernandinho participated in the 2014 FIFA World Cup.,Fernandinho participated in the 2014 FIFA World Cup.,2,0,2,NS,NS,Y
+Fernandinho participated in the 2018 FIFA World Cup.,Fernandinho participated in the 2018 FIFA World Cup.,2,0,2,NS,NS,Y
+He moved to Dutch club FC Groningen.,He moved to Dutch club FC Groningen.,3,0,3,S,S,Y
+He made the move in 2019.,He made the move in 2019.,3,0,3,S,S,Y
+He has become a regular starter in the team's defense.,He has become a regular starter in the team's defense.,3,0,3,NS,S,N
+Itakura has represented Japan at the Under-19-level.,Itakura has represented Japan at the Under-19-level.,3,0,3,NS,S,N
+Itakura has represented Japan at the Under-23 level.,Itakura has represented Japan at the Under-23 level.,3,0,3,NS,S,N
+Itakura made his senior debut for the national team in 2019.,Itakura made his senior debut for the national team in 2019.,3,0,3,S,S,Y
+"He was born on December 5, 1999.","He was born on December 5, 1999.",2,0,2,NS,S,N
+He was born in Hull.,He was born in Hull.,2,0,2,NS,S,N
+Hull is in England.,Hull is in England.,2,0,2,NS,S,N
+Houghton has established himself as one of the top hookers in the Super League.,Houghton has established himself as one of the top hookers in the Super League.,2,0,2,NS,S,N
+He was named Hull FC's player of the year.,He was named Hull FC's player of the year.,2,0,2,NS,S,N
+He was named player of the year in 2018.,He was named player of the year in 2018.,2,0,2,NS,S,N
+Mike Trivisonno is a radio personality.,Mike Trivisonno is a radio personality.,3,0,3,S,S,Y
+Mike Trivisonno is well-known.,Mike Trivisonno is well-known.,3,0,3,S,S,Y
+Mike Trivisonno is from Cleveland.,Mike Trivisonno is from Cleveland.,3,0,3,S,S,Y
+Cleveland is in Ohio.,Cleveland is in Ohio.,3,0,3,S,S,Y
+Trivisonno started his radio career at WIXY 1260 AM.,Trivisonno started his radio career at WIXY 1260 AM.,3,0,3,NS,S,N
+Trivisonno worked at WMMS.,Trivisonno worked at WMMS.,3,0,3,NS,S,N
+Trivisonno worked at WTAM.,Trivisonno worked at WTAM.,3,0,3,S,S,Y
+Trivisonno worked at WKNR.,Trivisonno worked at WKNR.,3,0,3,NS,S,N
+Estes is the grandson of Sleepy John Estes.,Estes is the grandson of Sleepy John Estes.,2,0,2,NS,S,N
+Sleepy John Estes is a blues musician.,Sleepy John Estes is a blues musician.,2,0,2,NS,S,N
+Sleepy John Estes is legendary.,Sleepy John Estes is legendary.,2,0,2,NS,S,N
+Estes learned to play guitar from his grandfather.,Estes learned to play guitar from his grandfather.,2,0,2,NS,S,N
+He currently resides in Nashville.,He currently resides in Nashville.,2,0,2,NS,S,N
+Nashville is in Tennessee.,Nashville is in Tennessee.,2,0,2,NS,S,N
+He continues to tour.,He continues to tour.,2,0,2,NS,S,N
+He continues to record new music.,He continues to record new music.,2,0,2,NS,S,N
+Katsu has written novels.,Katsu has written novels.,3,0,3,S,S,Y
+The Taker trilogy is a novel by Katsu.,The Taker trilogy is a novel by Katsu.,3,0,3,S,S,Y
+The Hunger is a novel by Katsu.,The Hunger is a novel by Katsu.,3,0,3,S,S,Y
+The Deep is a novel by Katsu.,The Deep is a novel by Katsu.,3,0,3,S,S,Y
+Red Widow is a novel by Katsu.,Red Widow is a novel by Katsu.,3,0,3,S,S,Y
+Katsu currently lives in Virginia.,Katsu currently lives in Virginia.,3,0,3,NS,S,N
+Katsu lives with her husband.,Katsu lives with her husband.,3,0,3,S,S,Y
+Rennie Fritchie is a public servant.,Rennie Fritchie is a public servant.,2,0,2,S,S,Y
+Rennie Fritchie is British.,Rennie Fritchie is British.,2,0,2,S,S,Y
+Rennie Fritchie is a Baroness.,Rennie Fritchie is a Baroness.,2,0,2,S,S,Y
+Rennie Fritchie is Baroness Fritchie.,Rennie Fritchie is Baroness Fritchie.,2,0,2,S,S,Y
+Rennie Fritchie is a crossbench member of the House of Lords.,Rennie Fritchie is a crossbench member of the House of Lords.,2,0,2,S,S,Y
+He had a brief stint with Universitario de Deportes.,He had a brief stint with Universitario de Deportes.,2,0,2,NS,S,N
+His stint with Universitario de Deportes was in 2003.,His stint with Universitario de Deportes was in 2003.,2,0,2,NS,S,N
+He then moved to Mexico.,He then moved to Mexico.,2,0,2,NS,S,N
+He went to Mexico to play for Club Necaxa.,He went to Mexico to play for Club Necaxa.,2,0,2,NS,S,N
+Salazar played for the Peru national team from 1995.,Salazar played for the Peru national team from 1995.,2,0,2,NS,S,N
+Salazar left the Peru national team in 2003.,Salazar left the Peru national team in 2003.,2,0,2,NS,S,N
+Salazar earned 28 caps for the Peru national team.,Salazar earned 28 caps for the Peru national team.,2,0,2,NS,S,N
+Salazar scored six goals for the Peru national team.,Salazar scored six goals for the Peru national team.,2,0,2,NS,S,N
+He grew up in a Christian household.,He grew up in a Christian household.,3,0,3,NS,S,N
+He became a Christian at a young age.,He became a Christian at a young age.,3,0,3,NS,S,N
+He was a pastor in South Africa.,He was a pastor in South Africa.,3,0,3,S,S,Y
+He served for many years as a pastor.,He served for many years as a pastor.,3,0,3,S,S,Y
+He served as the Executive Director of the International Christian Embassy Jerusalem.,He served as the Executive Director of the International Christian Embassy Jerusalem.,3,0,3,S,S,Y
+Hibo Wardere is a campaigner.,Hibo Wardere is a campaigner.,3,0,3,S,S,Y
+Hibo Wardere is an author.,Hibo Wardere is an author.,3,0,3,S,S,Y
+Hibo Wardere is Somali-born.,Hibo Wardere is Somali-born.,3,0,3,S,S,Y
+Hibo Wardere is based in the United Kingdom.,Hibo Wardere is based in the United Kingdom.,3,0,3,S,S,Y
+She has worked with a number of organizations.,She has worked with a number of organizations.,3,0,3,NS,S,N
+She has worked with the World Health Organization.,She has worked with the World Health Organization.,3,0,3,NS,S,N
+She has worked to educate communities about the dangers of FGM.,She has worked to educate communities about the dangers of FGM.,3,0,3,S,S,Y
+She has worked to promote the elimination of FGM.,She has worked to promote the elimination of FGM.,3,0,3,S,S,Y
+Nisar Ahmad Kakru was Kashmiri.,Nisar Ahmad Kakru was Kashmiri.,3,0,3,NS,S,N
+Nisar Ahmad Kakru was a prominent poet.,Nisar Ahmad Kakru was a prominent poet.,3,0,3,NS,S,N
+Nisar Ahmad Kakru was a prominent writer.,Nisar Ahmad Kakru was a prominent writer.,3,0,3,NS,S,N
+Nisar Ahmad Kakru was a prominent scholar.,Nisar Ahmad Kakru was a prominent scholar.,3,0,3,NS,S,N
+His poems are known for their simplicity.,His poems are known for their simplicity.,3,0,3,NS,NS,Y
+His poems are known for their clarity.,His poems are known for their clarity.,3,0,3,NS,NS,Y
+His poems are known for their use of everyday language.,His poems are known for their use of everyday language.,3,0,3,NS,NS,Y
+Don Featherstone was born in 1936.,Don Featherstone was born in 1936.,3,0,3,S,S,Y
+Don Featherstone died in 2015.,Don Featherstone died in 2015.,3,0,3,S,S,Y
+Don Featherstone was an American.,Don Featherstone was an American.,3,0,3,S,S,Y
+Don Featherstone was an artist.,Don Featherstone was an artist.,3,0,3,S,S,Y
+Don Featherstone was a designer.,Don Featherstone was a designer.,3,0,3,S,S,Y
+Don Featherstone created the plastic pink flamingo lawn ornament.,Don Featherstone created the plastic pink flamingo lawn ornament.,3,0,3,S,S,Y
+He has worked as a researcher at various organizations.,He has worked as a researcher at various organizations.,2,0,2,NS,S,N
+He has worked as a scientist at various organizations.,He has worked as a scientist at various organizations.,2,0,2,NS,S,N
+Mayo Clinic is an organization.,Mayo Clinic is an organization.,2,0,2,NS,S,N
+He has worked at Mayo Clinic.,He has worked at Mayo Clinic.,2,0,2,NS,S,N
+Google is an organization.,Google is an organization.,2,0,2,NS,S,N
+He has worked at Google.,He has worked at Google.,2,0,2,NS,S,N
+Continuum Analytics is an organization.,Continuum Analytics is an organization.,2,0,2,S,S,Y
+He has worked at Continuum Analytics.,He has worked at Continuum Analytics.,2,0,2,S,S,Y
+Furlong joined the Canadian Armed Forces.,Furlong joined the Canadian Armed Forces.,4,0,4,S,S,Y
+Furlong joined in 1995.,Furlong joined in 1995.,4,0,4,NS,S,N
+He served in the Princess Patricia's Canadian Light Infantry.,He served in the Princess Patricia's Canadian Light Infantry.,4,0,4,S,S,Y
+He served as a sniper.,He served as a sniper.,4,0,4,NS,S,N
+Furlong left the military.,Furlong left the military.,4,0,4,S,S,Y
+Furlong worked as a hunting guide.,Furlong worked as a hunting guide.,4,0,4,NS,S,N
+Furlong has been involved in various veteran organizations.,Furlong has been involved in various veteran organizations.,4,0,4,NS,NS,Y
+Jessica Barboza is Venezuelan.,Jessica Barboza is Venezuelan.,2,0,2,S,S,Y
+Jessica Barboza is a fashion model.,Jessica Barboza is a fashion model.,2,0,2,S,S,Y
+Jessica Barboza is a beauty queen.,Jessica Barboza is a beauty queen.,2,0,2,S,S,Y
+Jessica Barboza is a social media personality.,Jessica Barboza is a social media personality.,2,0,2,NS,S,N
+"She was born on July 18, 1987.","She was born on July 18, 1987.",2,0,2,S,S,Y
+She was born in Maracaibo.,She was born in Maracaibo.,2,0,2,S,S,Y
+Maracaibo is in Venezuela.,Maracaibo is in Venezuela.,2,0,2,S,S,Y
+"With CSKA, he won domestic titles.","With CSKA, he won domestic titles.",3,0,3,S,S,Y
+"With CSKA, he won international titles.","With CSKA, he won international titles.",3,0,3,S,S,Y
+"With CSKA, he won three Russian Premier League titles.","With CSKA, he won three Russian Premier League titles.",3,0,3,NS,S,N
+"With CSKA, he won the UEFA Cup.","With CSKA, he won the UEFA Cup.",3,0,3,S,S,Y
+He won the UEFA Cup in 2005.,He won the UEFA Cup in 2005.,3,0,3,S,S,Y
+Florencia Bertotti is an Argentinian.,Florencia Bertotti is an Argentinian.,5,0,5,S,S,Y
+Florencia Bertotti is an actress.,Florencia Bertotti is an actress.,5,0,5,S,S,Y
+Florencia Bertotti is a singer.,Florencia Bertotti is a singer.,5,0,5,S,S,Y
+Florencia Bertotti is a television host.,Florencia Bertotti is a television host.,5,0,5,NS,S,N
+Bertotti is a talented performer.,Bertotti is a talented performer.,5,0,5,NS,S,N
+Bertotti is an accomplished performer.,Bertotti is an accomplished performer.,5,0,5,NS,S,N
+Bertotti has made an impact on the entertainment industry in Argentina.,Bertotti has made an impact on the entertainment industry in Argentina.,5,0,5,NS,S,N
+Bertotti has made an impact on the entertainment industry beyond Argentina.,Bertotti has made an impact on the entertainment industry beyond Argentina.,5,0,5,NS,S,N
+Jonathan Haagensen is a Brazilian.,Jonathan Haagensen is a Brazilian.,3,0,3,S,S,Y
+Jonathan Haagensenis an actor.,Jonathan Haagensenis an actor.,3,0,3,S,S,Y
+"Jonathan Haagensen was born on February 3, 1982.","Jonathan Haagensen was born on February 3, 1982.",3,0,3,NS,S,N
+Jonathan Haagensen was born in Rio de Janeiro.,Jonathan Haagensen was born in Rio de Janeiro.,3,0,3,S,S,Y
+Rio de Janeiro is in Brazil.,Rio de Janeiro is in Brazil.,3,0,3,S,S,Y
+Haagensen began his acting career in theater.,Haagensen began his acting career in theater.,3,0,3,S,S,Y
+Haagensen began his acting career when he was 15 years old.,Haagensen began his acting career when he was 15 years old.,3,0,3,NS,S,N
+Haagensen later transitioned to television.,Haagensen later transitioned to television.,3,0,3,S,NS,N
+Haagensen later transitioned to film.,Haagensen later transitioned to film.,3,0,3,S,S,Y
+Kerser is an Australian.,Kerser is an Australian.,4,0,4,S,S,Y
+Kerser is a rapper.,Kerser is a rapper.,4,0,4,S,S,Y
+Kerser is a songwriter.,Kerser is a songwriter.,4,0,4,NS,S,N
+Kerser is from Sydney.,Kerser is from Sydney.,4,0,4,NS,S,N
+Kerser's real name is Scott Barrow.,Kerser's real name is Scott Barrow.,4,0,4,NS,S,N
+Botak Chin is also known as Chin Peng.,Botak Chin is also known as Chin Peng.,3,0,3,NS,S,N
+Botak Chin was a Malayan.,Botak Chin was a Malayan.,3,0,3,S,S,Y
+Botak Chin was a communist.,Botak Chin was a communist.,3,0,3,NS,S,N
+Botak Chin was a revolutionary.,Botak Chin was a revolutionary.,3,0,3,NS,S,N
+Botak Chin led the Communist Party of Malaya (CPM).,Botak Chin led the Communist Party of Malaya (CPM).,3,0,3,NS,S,N
+Botak Chin led the CPM in a guerrilla war.,Botak Chin led the CPM in a guerrilla war.,3,0,3,NS,S,N
+Botak Chin led the CPM against the British colonial government.,Botak Chin led the CPM against the British colonial government.,3,0,3,NS,S,N
+Botak Chin led the CPM in the 1940s and 1950s.,Botak Chin led the CPM in the 1940s and 1950s.,3,0,3,NS,S,N
+He started surfing at a young age.,He started surfing at a young age.,3,0,3,NS,S,N
+He quickly developed a passion for the sport.,He quickly developed a passion for the sport.,3,0,3,NS,S,N
+Owen is known for his powerful surfing style.,Owen is known for his powerful surfing style.,3,0,3,NS,S,N
+Owen is known for his dynamic surfing style.,Owen is known for his dynamic surfing style.,3,0,3,NS,S,N
+Owen is known for his ability to perform aerial maneuvers with ease.,Owen is known for his ability to perform aerial maneuvers with ease.,3,0,3,NS,S,N
+Shahnaz married Ardeshir Zahedi.,Shahnaz married Ardeshir Zahedi.,3,0,3,S,S,Y
+Shahnaz married in 1959.,Shahnaz married in 1959.,3,0,3,NS,S,N
+Ardeshir Zahedi served as Iran's foreign minister.,Ardeshir Zahedi served as Iran's foreign minister.,3,0,3,S,S,Y
+Ardeshir Zahedi served as Iran's ambassador to the United States.,Ardeshir Zahedi served as Iran's ambassador to the United States.,3,0,3,S,S,Y
+They had three children together.,They had three children together.,3,0,3,NS,NS,Y
+They divorced in 1964.,They divorced in 1964.,3,0,3,S,NS,N
+"She passed away on June 27, 2020.","She passed away on June 27, 2020.",3,0,3,NS,NS,Y
+She passed away at the age of 79.,She passed away at the age of 79.,3,0,3,NS,S,N
+Jidenna's music is a fusion of hip-hop.,Jidenna's music is a fusion of hip-hop.,5,0,5,NS,S,N
+Jidenna's music is a fusion of R&B.,Jidenna's music is a fusion of R&B.,5,0,5,NS,S,N
+Jidenna's music is a fusion of Afrobeat.,Jidenna's music is a fusion of Afrobeat.,5,0,5,NS,S,N
+He often incorporates African elements into his style.,He often incorporates African elements into his style.,5,0,5,S,NS,N
+He often incorporates African elements into his fashion.,He often incorporates African elements into his fashion.,5,0,5,S,NS,N
+"She was born on April 2, 1973.","She was born on April 2, 1973.",5,0,5,S,S,Y
+She was born in San Juan.,She was born in San Juan.,5,0,5,S,S,Y
+San Juan is in Puerto Rico.,San Juan is in Puerto Rico.,5,0,5,S,S,Y
+She has supported St. Jude Children's Research Hospital.,She has supported St. Jude Children's Research Hospital.,5,0,5,NS,NS,Y
+She has supported The National Alliance on Mental Illness.,She has supported The National Alliance on Mental Illness.,5,0,5,NS,NS,Y
+She has supported The National Foundation for Autism Research.,She has supported The National Foundation for Autism Research.,5,0,5,NS,S,N
+Ji Sung is South Korean.,Ji Sung is South Korean.,5,0,5,S,S,Y
+Ji Sung is an actor.,Ji Sung is an actor.,5,0,5,S,S,Y
+Ji Sung's real name is Kwak Tae Geun.,Ji Sung's real name is Kwak Tae Geun.,5,0,5,S,S,Y
+"Ji Sung was born on February 27, 1977.","Ji Sung was born on February 27, 1977.",5,0,5,S,S,Y
+He has since then starred in numerous dramas.,He has since then starred in numerous dramas.,5,0,5,S,S,Y
+The dramas he has starred in have been popular.,The dramas he has starred in have been popular.,5,0,5,S,S,Y
+He has since then starred in numerous films.,He has since then starred in numerous films.,5,0,5,S,S,Y
+The films he has starred in have been popular.,The films he has starred in have been popular.,5,0,5,S,S,Y
+"He has since then starred in ""Save the Last Dance for Me."".","He has since then starred in ""Save the Last Dance for Me."".",5,0,5,S,S,Y
+"""Save the Last Dance for Me."" is popular.","""Save the Last Dance for Me."" is popular.",5,0,5,S,S,Y
+"He has since then starred in ""New Heart."".","He has since then starred in ""New Heart."".",5,0,5,S,S,Y
+"""New Heart."" is popular.","""New Heart."" is popular.",5,0,5,S,S,Y
+"He has since then starred in ""Protect the Boss."".","He has since then starred in ""Protect the Boss."".",5,0,5,S,S,Y
+"-""Protect the Boss."" is popular.","-""Protect the Boss."" is popular.",5,0,5,S,S,Y
+"He has since then starred in ""Kill Me, Heal Me."".","He has since then starred in ""Kill Me, Heal Me."".",5,0,5,S,S,Y
+"""Kill Me, Heal Me."" is popular.","""Kill Me, Heal Me."" is popular.",5,0,5,S,S,Y
+"He has since then starred in ""Familiar Wife."".","He has since then starred in ""Familiar Wife."".",5,0,5,S,S,Y
+"""Familiar Wife."" is popular.","""Familiar Wife."" is popular.",5,0,5,S,S,Y

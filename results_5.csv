@@ -1,0 +1,11 @@
+Fact,Clean Fact,# of Total Passages,# of Passage with S,# of Passage with NS,Golden Label,Prediction Label,Correct?
+Joey D. Vieira is an actor.,Joey D. Vieira is an actor.,3,0,3,S,NS,N
+He made the move in 2019.,He made the move in 2019.,3,0,3,S,NS,N
+Jonathan Haagensen was born in Rio de Janeiro.,Jonathan Haagensen was born in Rio de Janeiro.,3,0,3,S,NS,N
+Hibo Wardere is based in the United Kingdom.,Hibo Wardere is based in the United Kingdom.,3,0,3,S,NS,N
+Jonathan Haagensen is a Brazilian.,Jonathan Haagensen is a Brazilian.,3,0,3,S,NS,N
+Botak Chin led the CPM in the 1940s and 1950s.,Botak Chin led the CPM in the 1940s and 1950s.,3,0,3,NS,NS,Y
+Owen is known for his dynamic surfing style.,Owen is known for his dynamic surfing style.,3,0,3,NS,NS,Y
+"Ji Sung was born on February 27, 1977.","Ji Sung was born on February 27, 1977.",5,0,5,S,NS,N
+Don Featherstone was born in 1936.,Don Featherstone was born in 1936.,3,0,3,S,NS,N
+Hibo Wardere is a campaigner.,Hibo Wardere is a campaigner.,3,0,3,S,NS,N

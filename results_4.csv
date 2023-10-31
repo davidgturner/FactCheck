@@ -1,0 +1,11 @@
+Fact,Clean Fact,# of Total Passages,# of Passage with S,# of Passage with NS,Golden Label,Prediction Label,Correct?
+He was named player of the year in 2018.,He was named player of the year in 2018.,2,0,2,NS,NS,Y
+Jean Daullé was known for his religious subjects.,Jean Daullé was known for his religious subjects.,4,0,4,NS,NS,Y
+He went to Mexico to play for Club Necaxa.,He went to Mexico to play for Club Necaxa.,2,0,2,NS,NS,Y
+Marianne McAndrew was born in Cleveland.,Marianne McAndrew was born in Cleveland.,2,0,2,NS,NS,Y
+He was born in Hull.,He was born in Hull.,2,0,2,NS,NS,Y
+Trivisonno worked at WKNR.,Trivisonno worked at WKNR.,3,0,3,NS,NS,Y
+Joey D. Vieira is an actor.,Joey D. Vieira is an actor.,3,0,3,S,NS,N
+"""Kill Me, Heal Me."" is popular.","""Kill Me, Heal Me."" is popular.",5,0,5,S,NS,N
+Fernandinho represents the Brazil national team.,Fernandinho represents the Brazil national team.,2,0,2,NS,NS,Y
+He has worked as a scientist at various organizations.,He has worked as a scientist at various organizations.,2,0,2,NS,NS,Y

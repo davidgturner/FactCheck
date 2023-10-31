@@ -1,0 +1,11 @@
+Fact,Clean Fact,# of Total Passages,# of Passage with S,# of Passage with NS,Golden Label,Prediction Label,Correct?
+Estes is the grandson of Sleepy John Estes.,Estes is the grandson of Sleepy John Estes.,2,0,2,NS,NS,Y
+He quickly developed a passion for the sport.,He quickly developed a passion for the sport.,3,0,3,NS,NS,Y
+Owen is known for his dynamic surfing style.,Owen is known for his dynamic surfing style.,3,0,3,NS,NS,Y
+She appeared in Belly.,She appeared in Belly.,3,0,3,S,NS,N
+Jonathan Haagensenis an actor.,Jonathan Haagensenis an actor.,3,0,3,S,NS,N
+He grew up in a Christian household.,He grew up in a Christian household.,3,0,3,NS,S,N
+"With CSKA, he won the UEFA Cup.","With CSKA, he won the UEFA Cup.",3,0,3,S,NS,N
+Hibo Wardere is Somali-born.,Hibo Wardere is Somali-born.,3,0,3,S,NS,N
+"She passed away on June 27, 2020.","She passed away on June 27, 2020.",3,0,3,NS,NS,Y
+He was named Hull FC's player of the year.,He was named Hull FC's player of the year.,2,0,2,NS,NS,Y
