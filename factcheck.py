@@ -215,7 +215,12 @@ class EntailmentFactChecker(object):
             passage_decision = "S" if whole_entailment_probs[ENTAILMENT_INDEX] > whole_entailment_probs[1] and whole_entailment_probs[ENTAILMENT_INDEX] > whole_entailment_probs[CONTRADICTION_INDEX] else "NS"
             #whole_passage_results.append(passage_decision)
             if passage_decision == "S":
-                return passage_decision
+                return {
+                    "decision": passage_decision,
+                    "max_entailment_score": max_entailment_score,
+                    "most_entailing_sentence": most_entailing_sentence,
+                    "most_contradicting_sentence": most_contradicting_sentence
+                }
 
             chunks = self.chunk_text(full_text, self.ent_model.tokenizer, max_length, overlap)
 
