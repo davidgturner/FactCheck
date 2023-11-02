@@ -68,7 +68,7 @@ def read_fact_examples(labeled_facts_path: str, fact_to_passage_dict: Dict):
     return examples
 
 
-def predict_two_classes(examples: List[FactExample], fact_checker):
+def predict_two_classes(examples: List[FactExample], fact_checker, nt, pt):
     """
     Compares against ground truth which is just the labels S and NS (IR is mapped to NS).
     Makes predictions and prints evaluation statistics on this setting.
@@ -91,8 +91,8 @@ def predict_two_classes(examples: List[FactExample], fact_checker):
             converted_label = "NS" if example.label == 'IR' else example.label
             gold_label = gold_label_indexer.index(converted_label)
 
-            # raw_pred = fact_checker.predict(example.fact, example.passages, nt, pt, ov)
-            raw_pred = fact_checker.predict(example.fact, example.passages)
+            raw_pred = fact_checker.predict(example.fact, example.passages, nt, pt)
+            # raw_pred = fact_checker.predict(example.fact, example.passages)
             pred_label = gold_label_indexer.index(raw_pred)
 
             #if pred_label != gold_label:
@@ -189,39 +189,42 @@ if __name__=="__main__":
     else:
         raise NotImplementedError
 
+    """
     nt = 0.3 # 0.35 # 0.2
     pt = 0.1 # 0.30
     overlap = 50 # 10
-    # predict_two_classes(examples, fact_checker, nt, pt)
+    examples = random.sample(examples, 20)
+    #predict_two_classes(examples, fact_checker, nt, pt)
     predict_two_classes(examples, fact_checker)
+    """
 
-    # # Define the range of thresholds
-    # pos_thresholds = [i * 0.05 for i in range(2, 13)]  # 0.10, 0.15, ..., 0.60
-    # neg_thresholds = [i * 0.05 for i in range(2, 11)]  # 0.10, 0.15, ..., 0.50
+    # Define the range of thresholds
+    pos_thresholds = [i * 0.05 for i in range(2, 13)]  # 0.10, 0.15, ..., 0.60
+    neg_thresholds = [i * 0.05 for i in range(2, 11)]  # 0.10, 0.15, ..., 0.50
 
-    # best_accuracy = 0.0
-    # best_pos_threshold = 0.0
-    # best_neg_threshold = 0.0
+    best_accuracy = 0.0
+    best_pos_threshold = 0.0
+    best_neg_threshold = 0.0
 
-    # # Loop over the thresholds
-    # for pt in pos_thresholds:
-    #     for nt in neg_thresholds:
-    #         # Sample a subset of examples for testing
-    #         sampled_examples = random.sample(examples, 15)
+    # Loop over the thresholds
+    for pt in pos_thresholds:
+        for nt in neg_thresholds:
+            # Sample a subset of examples for testing
+            sampled_examples = random.sample(examples, 25)
             
-    #         # Calculate accuracy for the current thresholds
-    #         accuracy = predict_two_classes(sampled_examples, fact_checker, nt, pt)
+            # Calculate accuracy for the current thresholds
+            accuracy = predict_two_classes(sampled_examples, fact_checker, nt, pt)
             
-    #         # Update best thresholds if current accuracy is higher
-    #         if accuracy > best_accuracy:
-    #             best_accuracy = accuracy
-    #             best_pos_threshold = pt
-    #             best_neg_threshold = nt
+            # Update best thresholds if current accuracy is higher
+            if accuracy > best_accuracy:
+                best_accuracy = accuracy
+                best_pos_threshold = pt
+                best_neg_threshold = nt
 
-    #             print("best so far:======")
-    #             print("Best Positive Threshold:", best_pos_threshold)
-    #             print("Best Negative Threshold:", best_neg_threshold)
-    #             print("Best Accuracy:", best_accuracy)
+                print("best so far:======")
+                print("Best Positive Threshold:", best_pos_threshold)
+                print("Best Negative Threshold:", best_neg_threshold)
+                print("Best Accuracy:", best_accuracy)
 
     # # Print the best thresholds
     # print("Best Positive Threshold:", best_pos_threshold)
