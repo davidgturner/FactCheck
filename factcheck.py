@@ -9,11 +9,14 @@ import gc
 
 import nltk
 from typing import List
+from nltk.tokenize import PunktSentenceTokenizer, word_tokenize
+from nltk import pos_tag
 
 from transformers import AutoConfig
 
 nltk.download('stopwords')
 nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
 
 spacy_nlp = spacy.load("en_core_web_sm")
 
@@ -170,40 +173,76 @@ class EntailmentFactChecker(object):
     def __init__(self, ent_model):
         self.ent_model : EntailmentModel = ent_model
         self.word_recall_fact_checker = WordRecallThresholdFactChecker()
+        self.sent_tokenizer = PunktSentenceTokenizer()
 
     def clean_text(self, text: str) -> str:
         text = text.encode("ascii", "ignore").decode()  # remove non-ASCII characters
         text = re.sub(r'\.""', '".', text)  # replace `.""` with `".`
+        text = re.sub(r'<s>', '', text)  # remove <s> tokens
+        text = re.sub(r'</s>', '', text)  # remove </s> tokens
         return re.sub(r'\s+', ' ', text).strip()
 
-    def chunk_text(self, text, tokenizer, max_length):
-        # check if text exceeds the max_length
-        if len(tokenizer.tokenize(text, add_special_tokens=False)) > max_length:
-            print("max exceeed, take the first 255 and last 255.")
-            # take first 255 tokens and the last 255 tokens to have max, but capture most important parts usually
-            start_text = text[:255]
-            end_text = text[-255:]
-            text = start_text + " " + end_text
+    # def chunk_text(self, text, tokenizer, max_length):
+    #     # check if text exceeds the max_length
+    #     if len(tokenizer.tokenize(text, add_special_tokens=False)) > max_length:
+    #         print("max exceeed, take the first 255 and last 255.")
+    #         # take first 255 tokens and the last 255 tokens to have max, but capture most important parts usually
+    #         start_text = text[:255]
+    #         end_text = text[-255:]
+    #         text = start_text + " " + end_text
 
-        # encode the text with the tokenizer
-        encoded_input = tokenizer(text, add_special_tokens=False, padding='max_length', truncation=True, max_length=max_length, return_tensors='pt')
-        return encoded_input
+    #     # encode the text with the tokenizer
+    #     encoded_input = tokenizer(text, add_special_tokens=False, padding='max_length', truncation=True, max_length=max_length, return_tensors='pt')
+    #     return encoded_input
 
-    def check_fact(self, fact, passages, threshold=0.5, max_length=512):
+    # is_coherent checks if a sentence is coherent or not so we can filter out the incoherent ones. 
+    def is_coherent(self, sentence):
+        # length based filtering
+        if len(word_tokenize(sentence)) < 5:  # Assuming a minimum of 5 words for coherence
+            return False
+        
+        # pos tagging
+        tags = [tag for word, tag in pos_tag(word_tokenize(sentence))]
+        essential_tags = ['NN', 'VB']  # nouns and Verbs
+        if not any(tag in tags for tag in essential_tags):
+            return False
+        
+        return True
+
+    def chunk_text(self, text, max_length):
+        # Clean the text
+        #print("input text ", text)
+        text = self.clean_text(text)
+        #print("clean text ", text)
+        # Tokenize using PunktSentenceTokenizer
+        sentences = self.sent_tokenizer.tokenize(text)
+        #print("tokenized into sentences: ", sentences)
+        
+        # # Check if the combined length of sentences exceeds max_length
+        # if sum(len(sentence) for sentence in sentences) > max_length:
+        #     # Take the first 255 characters and the last 255 characters
+        #     start_text = text[:255]
+        #     end_text = text[-255:]
+        #     text = start_text + " " + end_text
+        return sentences
+
+    def check_fact(self, fact, passages, threshold=0.7, max_length=512):
         max_entailment_score = 0.0
         most_entailing_sentence = ""
         most_contradicting_sentence = ""
         passage_results = []
 
         for passage in passages:
-            full_text = passage['title'] + "." + passage['text']
-            chunks = self.chunk_text(full_text, self.ent_model.tokenizer, max_length)
-
-            for chunk in chunks:
-                entailment_prob, neutral_prob, contradiction_prob = self.ent_model.check_entailment(fact, self.clean_text(chunk))
+            full_text = passage['title'] + " " + passage['text']
+            # chunks = self.chunk_text(full_text, self.ent_model.tokenizer, max_length)
+            sentences = self.chunk_text(full_text, max_length)
+            # sentences = self.chunk_text(full_text, max_length)
+            coherent_sentences = [sentence for sentence in sentences if self.is_coherent(sentence)]
+            for sent in coherent_sentences:
+                entailment_prob, neutral_prob, contradiction_prob = self.ent_model.check_entailment(fact, self.clean_text(sent))
                 if entailment_prob > max_entailment_score:
                     max_entailment_score = entailment_prob
-                    most_entailing_sentence = chunk
+                    most_entailing_sentence = sent
 
             passage_decision = "S" if max_entailment_score > threshold else "NS"
             passage_results.append(passage_decision)
@@ -258,7 +297,7 @@ class EntailmentFactChecker(object):
             "most_contradicting_sentence": most_contradicting_sentence
         }
     
-    def predict(self, fact: str, passages: List[dict], overlap_threshold=0.45, positive_threshold=0.15) -> str:
+    def predict(self, fact: str, passages: List[dict], overlap_threshold=0.45, positive_threshold=0.2) -> str:
         max_length = 512
         word_overlap_similarity = self.word_recall_fact_checker.evaluate_similarity(fact, passages)
         if word_overlap_similarity < overlap_threshold:

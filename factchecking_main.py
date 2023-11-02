@@ -189,15 +189,15 @@ if __name__=="__main__":
     else:
         raise NotImplementedError
 
-    """
-    nt = 0.3 # 0.35 # 0.2
-    pt = 0.1 # 0.30
-    overlap = 50 # 10
-    examples = random.sample(examples, 20)
-    #predict_two_classes(examples, fact_checker, nt, pt)
-    predict_two_classes(examples, fact_checker)
-    """
+    nt = 0.45 # 0.35 # 0.2
+    pt = 0.2 # 0.30
+    # overlap = 50 # 10
+    # examples = random.sample(examples, 25)
+    predict_two_classes(examples, fact_checker, nt, pt)
+    # predict_two_classes(examples, fact_checker)
 
+    # Hyperparam tuning
+    """
     # Define the range of thresholds
     pos_thresholds = [i * 0.05 for i in range(2, 13)]  # 0.10, 0.15, ..., 0.60
     neg_thresholds = [i * 0.05 for i in range(2, 11)]  # 0.10, 0.15, ..., 0.50
@@ -225,6 +225,7 @@ if __name__=="__main__":
                 print("Best Positive Threshold:", best_pos_threshold)
                 print("Best Negative Threshold:", best_neg_threshold)
                 print("Best Accuracy:", best_accuracy)
+    """
 
     # # Print the best thresholds
     # print("Best Positive Threshold:", best_pos_threshold)
