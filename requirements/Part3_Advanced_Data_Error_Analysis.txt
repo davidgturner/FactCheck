@@ -1,0 +1,46 @@
+
+Can you conduct an advanced error data analysis on the attached file? It should be from the perspective of picking out a random 
+set of 10 False Positives (Where predicted was Supported, but Golden Truth Label was Not Supported) and 10 False Negatives where model was saying predicted was Not Supported, but the Golden Label said Supported.
+
+We can delve deeper into these together, but just wanted a good sample to work with. 
+
+Can you conduct an advanced error data analysis on the attached file? It should be from the perspective of picking out a random 
+set of 10 False Positives (Where predicted was Supported, but Golden Truth Label was Not Supported) and 10 False Negatives where model was saying predicted was Not Supported, but the Golden Label said Supported. 
+
+Category Descriptions
+
+Category 1: Golden Standard is Wrong, but Model is Correct 
+{1-2 sentences to add here }
+
+Category 2: Tokenization / Text Preprocessing is Poor 
+{1-2 sentences to add here }
+
+Category 3: {}
+
+Aggregate Statistics 
+
+{  how many errors of each type? } 
+
+Three Examples Detailed Discussion:
+
+Example 1:
+	Example Text:
+	Grouth Truth Label:
+	Model Prediction Label:
+	Fine Grained Error Type:
+	Reasoning:
+
+Example 2:
+	Example Text:
+	Grouth Truth Label:
+	Model Prediction Label:
+	Fine Grained Error Type:
+	Reasoning:
+
+Example 3:
+	Example Text:
+	Grouth Truth Label:
+	Model Prediction Label:
+	Fine Grained Error Type:
+	Reasoning:
+
