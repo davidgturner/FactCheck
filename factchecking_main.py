@@ -95,8 +95,8 @@ def predict_two_classes(examples: List[FactExample], fact_checker, nt, pt):
             # raw_pred = fact_checker.predict(example.fact, example.passages)
             pred_label = gold_label_indexer.index(raw_pred)
 
-            #if pred_label != gold_label:
-            #    print("incorrect: example.fact: ", example.fact, " gold label ", converted_label, " pred label ", raw_pred)
+            if pred_label != gold_label:
+               print("incorrect: example.fact: ", example.fact, " gold label ", converted_label, " pred label ", raw_pred)
 
             # Compute the desired metrics
             total_passages = len(example.passages)
@@ -189,10 +189,9 @@ if __name__=="__main__":
     else:
         raise NotImplementedError
 
-    nt = 0.45 # 0.35 # 0.2
-    pt = 0.2 # 0.30
-    # overlap = 50 # 10
-    # examples = random.sample(examples, 25)
+    nt = 0.40
+    pt = 0.20
+    examples = random.sample(examples, 125)
     predict_two_classes(examples, fact_checker, nt, pt)
     # predict_two_classes(examples, fact_checker)
 
