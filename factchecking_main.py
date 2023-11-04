@@ -190,8 +190,8 @@ if __name__=="__main__":
         raise NotImplementedError
 
     nt = 0.40
-    pt = 0.20
-    examples = random.sample(examples, 125)
+    pt = 0.60
+    examples = random.sample(examples, 50)
     predict_two_classes(examples, fact_checker, nt, pt)
     # predict_two_classes(examples, fact_checker)
 

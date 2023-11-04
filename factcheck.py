@@ -176,66 +176,30 @@ class EntailmentFactChecker(object):
         self.sent_tokenizer = PunktSentenceTokenizer()
 
     def clean_text(self, text):
-        #text = text.encode("ascii", "ignore").decode()     # remove non-ASCII characters
         text = re.sub(r'<s>|</s>', '', text)  # remove <s> and </s> tokens
-        # text = re.sub(r'""', '"', text)  # normalize double quotes
-        # text = re.sub(r'"\s*\.|\."\s*"', '.', text)  # handle quotes around periods
-        # text = re.sub(r'"\s*,|\,"\s*"', ',', text)  # handle quotes around commas
-        # text = re.sub(r'\s+"|\s+"', ' ', text)  # handle quotes preceded/followed by whitespace
-        # text = text.replace('"', '')  # remove any remaining double quotes
-        # text = re.sub(r'\s+', ' ', text).strip()  # replace multiple spaces with a single space and strip leading/trailing spaces
         return text
 
-    # is_coherent checks if a sentence is coherent or not so we can filter out the incoherent ones. 
-    def is_coherent(self, sentence):
-        # length based filtering
-        if len(word_tokenize(sentence)) < 10:  # assuming minimum of 5 words for coherence
-            return False
-        
-        # pos tagging
-        tags = [tag for word, tag in pos_tag(word_tokenize(sentence))]
-        essential_tags = ['NN', 'VB']  # nouns and Verbs
-        if not any(tag in tags for tag in essential_tags):
-            return False
-        
-        return True
-
     def chunk_text(self, text, max_length):
-        # Clean the text first
+        # clean text first
         text = self.clean_text(text)
         
-        # Use the tokenizer to encode the text, handling padding and truncation
+        # use tokenizer to encode the text, handling padding and truncation
         encoded_input = self.ent_model.tokenizer(
             text,
-            #add_special_tokens=True,  # Add '[CLS]' and '[SEP]'
             add_special_tokens=False,
-            max_length=max_length,   # Specify the max length for each chunk
-            padding='max_length',    # Pad to max_length
-            truncation=True,         # Truncate to max_length
-            return_tensors='pt'      # Return PyTorch tensors
+            max_length=max_length,   # specfiy max length for each chunk
+            padding='max_length',    # pad max_length
+            truncation=True,         # truncate max_length
+            return_tensors='pt'      
         )
         
-        # Convert token IDs back to tokens to get a list of strings
+        # convert token IDs back to tokens to get a list of strings
         tokens = self.ent_model.tokenizer.convert_ids_to_tokens(encoded_input['input_ids'][0], skip_special_tokens=True)
         
-        # Convert tokens to a single string, if necessary
+        # convert tokens to a single string
         text_chunk = self.ent_model.tokenizer.convert_tokens_to_string(tokens)
         
-        # # Convert token IDs back to tokens to get a list of strings
-        # tokens = self.ent_model.tokenizer.convert_ids_to_tokens(encoded_input['input_ids'][0], skip_special_tokens=True)
-        
-        # # Convert tokens to a single string
-        # text_chunk = self.ent_model.tokenizer.convert_tokens_to_string(tokens)
-        
-        # # TODO - find out if this helps or if I even need it?
-        # text_chunk = text_chunk.encode('ascii', 'ignore').decode('ascii')
-
-        # text_chunk = text_chunk.replace('\\"', '"')
         return text_chunk
-        #return text_chunk.strip()
-        # text = self.clean_text(text)
-        # sentences = self.sent_tokenizer.tokenize(text)
-        # return sentences
 
     def check_fact(self, fact, passages, threshold=0.25, max_length=512):
         max_entailment_score = 0.0
@@ -250,23 +214,11 @@ class EntailmentFactChecker(object):
         clean_total_full_passage_text = ""
         for passage in passages:
             full_text = passage['title'] + " is about " + passage['text']
-            #full_text = passage['text']
 
             sentences = self.chunk_text(full_text, max_length)
-            #sentences = [sentence for sentence in sentences if self.is_coherent(sentence)]
-            #for sent in sentences:
             clean_sentences = self.clean_text(sentences)
             clean_total_full_passage_text += clean_sentences
             entailment_prob, neutral_prob, contradiction_prob = self.ent_model.check_entailment(fact, clean_sentences)
-            # if neutral_prob > 0.50 and neutral_prob > entailment_prob and neutral_prob > contradiction_prob:
-            #     return {
-            #         "decision": word_overlap_decision,
-            #         "max_entailment_score": max_entailment_score,
-            #         "most_entailing_sentence": most_entailing_sentence,
-            #         "most_contradicting_sentence": most_contradicting_sentence,
-            #         "clean_total_full_passage_text": clean_total_full_passage_text,
-            #         "og_passages": passages
-            #     }
             
             if entailment_prob > neutral_prob or contradiction_prob > neutral_prob:
                 if entailment_prob > max_entailment_score:
@@ -282,8 +234,7 @@ class EntailmentFactChecker(object):
 
         decision_a = "S" if max_entailment_score > max_contradiction_score else word_overlap_decision
         decision_b = "S" if passage_results.count("S") > passage_results.count("NS") else word_overlap_decision
-        #decision_c = "S" if passage_results.count("S") > 0 else "NS"
-        decisions = [decision_a , decision_b] # [decision_b, decision_c, decision_e]
+        decisions = [decision_a, decision_b]
 
         decision = "S" if decisions.count("S") > decisions.count("NS") else word_overlap_decision
 
@@ -296,49 +247,8 @@ class EntailmentFactChecker(object):
             "clean_total_full_passage_text": clean_total_full_passage_text,
             "og_passages": passages
         }
-
-    def check_fact_whole_passage(self, fact, passages, threshold=0.5, max_length=512, overlap=50):
-        max_entailment_score = 0.0
-        max_contradiction_score = 0.0
-        ENTAILMENT_INDEX = 0
-        CONTRADICTION_INDEX = 2
-        most_entailing_sentence = ""
-        most_contradicting_sentence = ""
-        passage_results = []
-
-        clean_total_full_passage_text = ""
-
-        for passage in passages:
-            full_passage_text = passage['title'] + " " + passage['text']
-
-            clean_full_passage_text = self.clean_text(full_passage_text)
-            clean_total_full_passage_text += clean_full_passage_text + "\n"
-            
-            entailment_probs, neutral_probs, contradiction_probs = self.ent_model.check_entailment(fact,clean_full_passage_text)
-
-            if entailment_probs > max_entailment_score:
-                max_entailment_score = entailment_probs
-                most_entailing_sentence = full_passage_text
-
-            passage_decision = "S" if max_entailment_score > max_contradiction_score else "NS"
-            passage_results.append(passage_decision)
-
-        decision_b = "S" if passage_results.count("S") > passage_results.count("NS") else "NS"
-        decision_c = "S" if passage_results.count("S") > 0 else "NS"
-
-        decisions = [decision_b, decision_c]
-        decision = "S" if decisions.count("S") > decisions.count("NS") else "NS"
-
-        return {
-            "decision": decision,
-            "max_entailment_score": max_entailment_score,
-            "max_contradiction_score": max_contradiction_score,
-            "most_entailing_sentence": most_entailing_sentence,
-            "most_contradicting_sentence": most_contradicting_sentence,
-            "clean_total_full_passage_text": clean_total_full_passage_text
-        }
     
-    def predict(self, fact: str, passages: List[dict], overlap_threshold=0.45, positive_threshold=0.25) -> str:
+    def predict(self, fact: str, passages: List[dict], overlap_threshold=0.40, positive_threshold=0.20) -> str:
         max_length = 512
         word_overlap_similarity = self.word_recall_fact_checker.evaluate_similarity(fact, passages)
         if word_overlap_similarity < overlap_threshold:
