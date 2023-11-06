@@ -176,10 +176,10 @@ def hyperparam_tuning(examples, fact_checker, predict_two_classes, start=0.10, e
     # Loop over the thresholds
     for threshold in thresholds:
         # Sample a subset of examples for testing
-        sampled_examples = examples # random.sample(examples, 221)
+        sampled_examples = examples # random.sample(examples, 25)
         
         # Calculate accuracy for the current threshold
-        accuracy = predict_two_classes(sampled_examples, fact_checker, threshold, threshold)
+        accuracy = predict_two_classes(sampled_examples, fact_checker, 0.20, threshold)
         
         # Update best thresholds if current accuracy is higher
         if accuracy > best_accuracy:
@@ -238,18 +238,18 @@ if __name__=="__main__":
     else:
         raise NotImplementedError
 
-    nt = 0.22
-    pt = 0.22
+    # nt = 0.20
+    # pt = 0.22
     # examples = random.sample(examples, 20)
-    predict_two_classes(examples, fact_checker, nt, pt)
-    #predict_two_classes(examples, fact_checker)
+    # predict_two_classes(examples, fact_checker, nt, pt)
+    # #predict_two_classes(examples, fact_checker)
 
-    import sys
-    sys.exit()
+    # import sys
+    # sys.exit()
 
     # TODO - add caching storage to entailment model calls
 
-    best_threshold, best_accuracy = hyperparam_tuning(examples, fact_checker, predict_two_classes, start=0.18, end=0.22, interval=0.02)
+    best_threshold, best_accuracy = hyperparam_tuning(examples, fact_checker, predict_two_classes, start=0.24, end=0.27, interval=0.01)
     print("best threshold: ", best_threshold)
     print("best accuracy: ", best_accuracy)
 
