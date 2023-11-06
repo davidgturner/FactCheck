@@ -155,6 +155,55 @@ def print_eval_stats(confusion_mat, gold_label_indexer) -> float:
         return correct_preds/total_preds
 
 
+def hyperparam_tuning(examples, fact_checker, predict_two_classes, start=0.10, end=0.20, interval=0.01):
+    """
+    Adjusts the hyperparameter tuning to find the ideal thresholds.
+    
+    :param examples: List of examples to test.
+    :param fact_checker: The fact checker instance.
+    :param predict_two_classes: The prediction function that uses thresholds.
+    :param start: The starting value of the threshold range.
+    :param end: The ending value of the threshold range.
+    :param interval: The interval between consecutive threshold values.
+    :return: A tuple of the best positive threshold, best negative threshold, and best accuracy.
+    """
+    # Define the range of thresholds based on parameters
+    thresholds = [i for i in frange(start, end, interval)]
+    
+    best_accuracy = 0.0
+    best_threshold = 0.0
+
+    # Loop over the thresholds
+    for threshold in thresholds:
+        # Sample a subset of examples for testing
+        sampled_examples = examples # random.sample(examples, 221)
+        
+        # Calculate accuracy for the current threshold
+        accuracy = predict_two_classes(sampled_examples, fact_checker, threshold, threshold)
+        
+        # Update best thresholds if current accuracy is higher
+        if accuracy > best_accuracy:
+            best_accuracy = accuracy
+            best_threshold = threshold
+
+            print("best so far:======")
+            print("Best Threshold:", best_threshold)
+            print("Best Accuracy:", best_accuracy)
+    
+    return best_threshold, best_accuracy
+
+def frange(start, end, step):
+    """
+    Generator that produces a range of float values from start to end by step.
+    
+    :param start: The start value.
+    :param end: The end value.
+    :param step: The step interval.
+    """
+    while start < end:
+        yield round(start, 2)
+        start += step
+
 if __name__=="__main__":
     args = _parse_args()
     print(args)
@@ -189,14 +238,23 @@ if __name__=="__main__":
     else:
         raise NotImplementedError
 
-    nt = 0.40
-    pt = 0.20
-    examples = random.sample(examples, 55)
+    nt = 0.22
+    pt = 0.22
+    # examples = random.sample(examples, 20)
     predict_two_classes(examples, fact_checker, nt, pt)
-    # predict_two_classes(examples, fact_checker)
+    #predict_two_classes(examples, fact_checker)
 
-    # Hyperparam tuning
+    import sys
+    sys.exit()
+
+    # TODO - add caching storage to entailment model calls
+
+    best_threshold, best_accuracy = hyperparam_tuning(examples, fact_checker, predict_two_classes, start=0.18, end=0.22, interval=0.02)
+    print("best threshold: ", best_threshold)
+    print("best accuracy: ", best_accuracy)
+
     """
+    # Hyperparam tuning
     # Define the range of thresholds
     pos_thresholds = [i * 0.05 for i in range(2, 13)]  # 0.10, 0.15, ..., 0.60
     neg_thresholds = [i * 0.05 for i in range(2, 11)]  # 0.10, 0.15, ..., 0.50
@@ -209,7 +267,7 @@ if __name__=="__main__":
     for pt in pos_thresholds:
         for nt in neg_thresholds:
             # Sample a subset of examples for testing
-            sampled_examples = random.sample(examples, 25)
+            sampled_examples = random.sample(examples, 10)
             
             # Calculate accuracy for the current thresholds
             accuracy = predict_two_classes(sampled_examples, fact_checker, nt, pt)
