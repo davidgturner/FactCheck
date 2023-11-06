@@ -1,6 +1,7 @@
 # factscore_retrieval_interface.py
 
 import json
+import random
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from typing import List, Dict
 from tqdm import tqdm
@@ -67,7 +68,7 @@ def read_fact_examples(labeled_facts_path: str, fact_to_passage_dict: Dict):
     return examples
 
 
-def predict_two_classes(examples: List[FactExample], fact_checker):
+def predict_two_classes(examples: List[FactExample], fact_checker, nt, pt):
     """
     Compares against ground truth which is just the labels S and NS (IR is mapped to NS).
     Makes predictions and prints evaluation statistics on this setting.
@@ -80,7 +81,9 @@ def predict_two_classes(examples: List[FactExample], fact_checker):
 
     # Setup CSV file
     with open('results.csv', 'w', newline='') as csvfile:
-        fieldnames = ['Fact', 'Clean Fact', '# of Total Passages', '# of Passage with S', '# of Passage with NS', 'Golden Label', 'Prediction Label', 'Correct?']
+        #fieldnames = ['Fact', 'Clean Fact', '# of Total Passages', '# of Passage with S', '# of Passage with NS', 'Golden Label', 'Prediction Label', 'Correct?']
+        fieldnames = ['Fact', '# of Total Passages', '# of Passage with S', '# of Passage with NS', 'Golden Label', 'Prediction Label', 'Correct?']
+        
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
 
@@ -88,11 +91,12 @@ def predict_two_classes(examples: List[FactExample], fact_checker):
             converted_label = "NS" if example.label == 'IR' else example.label
             gold_label = gold_label_indexer.index(converted_label)
 
-            raw_pred = fact_checker.predict(example.fact, example.passages)
+            raw_pred = fact_checker.predict(example.fact, example.passages, nt, pt)
+            # raw_pred = fact_checker.predict(example.fact, example.passages)
             pred_label = gold_label_indexer.index(raw_pred)
 
-            #if pred_label != gold_label:
-            #    print("incorrect: example.fact: ", example.fact, " gold label ", converted_label, " pred label ", raw_pred)
+            if pred_label != gold_label:
+               print("incorrect: example.fact: ", example.fact, " gold label ", converted_label, " pred label ", raw_pred)
 
             # Compute the desired metrics
             total_passages = len(example.passages)
@@ -103,7 +107,7 @@ def predict_two_classes(examples: List[FactExample], fact_checker):
             # Write to CSV
             writer.writerow({
                 'Fact': example.fact,
-                'Clean Fact': fact_checker.clean_text(example.fact),
+                # 'Clean Fact': fact_checker.clean_text(example.fact),
                 '# of Total Passages': total_passages,
                 '# of Passage with S': passages_with_s,
                 '# of Passage with NS': passages_with_ns,
@@ -114,10 +118,10 @@ def predict_two_classes(examples: List[FactExample], fact_checker):
 
             confusion_mat[gold_label][pred_label] += 1
             ex_count += 1
-    print_eval_stats(confusion_mat, gold_label_indexer)
+    return print_eval_stats(confusion_mat, gold_label_indexer)
 
 
-def print_eval_stats(confusion_mat, gold_label_indexer):
+def print_eval_stats(confusion_mat, gold_label_indexer) -> float:
     """
     Takes a confusion matrix and the label indexer and prints accuracy and per-class F1
     :param confusion_mat: The confusion matrix, indexed as [gold_label, pred_label]
@@ -148,6 +152,57 @@ def print_eval_stats(confusion_mat, gold_label_indexer):
         print("Rec for " + gold_label_indexer[idx] + ": " + repr(num_correct) + "/" + repr(num_gold) + " = " + repr(rec))
         print("F1 for " + gold_label_indexer[idx] + ": " + repr(f1))
 
+        return correct_preds/total_preds
+
+
+def hyperparam_tuning(examples, fact_checker, predict_two_classes, start=0.10, end=0.20, interval=0.01):
+    """
+    Adjusts the hyperparameter tuning to find the ideal thresholds.
+    
+    :param examples: List of examples to test.
+    :param fact_checker: The fact checker instance.
+    :param predict_two_classes: The prediction function that uses thresholds.
+    :param start: The starting value of the threshold range.
+    :param end: The ending value of the threshold range.
+    :param interval: The interval between consecutive threshold values.
+    :return: A tuple of the best positive threshold, best negative threshold, and best accuracy.
+    """
+    # Define the range of thresholds based on parameters
+    thresholds = [i for i in frange(start, end, interval)]
+    
+    best_accuracy = 0.0
+    best_threshold = 0.0
+
+    # Loop over the thresholds
+    for threshold in thresholds:
+        # Sample a subset of examples for testing
+        sampled_examples = examples # random.sample(examples, 25)
+        
+        # Calculate accuracy for the current threshold
+        accuracy = predict_two_classes(sampled_examples, fact_checker, 0.20, threshold)
+        
+        # Update best thresholds if current accuracy is higher
+        if accuracy > best_accuracy:
+            best_accuracy = accuracy
+            best_threshold = threshold
+
+            print("best so far:======")
+            print("Best Threshold:", best_threshold)
+            print("Best Accuracy:", best_accuracy)
+    
+    return best_threshold, best_accuracy
+
+def frange(start, end, step):
+    """
+    Generator that produces a range of float values from start to end by step.
+    
+    :param start: The start value.
+    :param end: The end value.
+    :param step: The step interval.
+    """
+    while start < end:
+        yield round(start, 2)
+        start += step
 
 if __name__=="__main__":
     args = _parse_args()
@@ -183,11 +238,92 @@ if __name__=="__main__":
     else:
         raise NotImplementedError
 
-    #examples = examples[:20]
-    #import random
-    examples = random.sample(examples, 20)
-    # # combined = examples_1 + random_sample
-    # # # print("using the combined of size: ", len(combined))
-    # # examples = combined
+    # nt = 0.20
+    # pt = 0.22
+    # examples = random.sample(examples, 20)
+    # predict_two_classes(examples, fact_checker, nt, pt)
+    # #predict_two_classes(examples, fact_checker)
 
-    predict_two_classes(examples, fact_checker)
+    # import sys
+    # sys.exit()
+
+    # TODO - add caching storage to entailment model calls
+
+    best_threshold, best_accuracy = hyperparam_tuning(examples, fact_checker, predict_two_classes, start=0.24, end=0.27, interval=0.01)
+    print("best threshold: ", best_threshold)
+    print("best accuracy: ", best_accuracy)
+
+    """
+    # Hyperparam tuning
+    # Define the range of thresholds
+    pos_thresholds = [i * 0.05 for i in range(2, 13)]  # 0.10, 0.15, ..., 0.60
+    neg_thresholds = [i * 0.05 for i in range(2, 11)]  # 0.10, 0.15, ..., 0.50
+
+    best_accuracy = 0.0
+    best_pos_threshold = 0.0
+    best_neg_threshold = 0.0
+
+    # Loop over the thresholds
+    for pt in pos_thresholds:
+        for nt in neg_thresholds:
+            # Sample a subset of examples for testing
+            sampled_examples = random.sample(examples, 10)
+            
+            # Calculate accuracy for the current thresholds
+            accuracy = predict_two_classes(sampled_examples, fact_checker, nt, pt)
+            
+            # Update best thresholds if current accuracy is higher
+            if accuracy > best_accuracy:
+                best_accuracy = accuracy
+                best_pos_threshold = pt
+                best_neg_threshold = nt
+
+                print("best so far:======")
+                print("Best Positive Threshold:", best_pos_threshold)
+                print("Best Negative Threshold:", best_neg_threshold)
+                print("Best Accuracy:", best_accuracy)
+    """
+
+    # # Print the best thresholds
+    # print("Best Positive Threshold:", best_pos_threshold)
+    # print("Best Negative Threshold:", best_neg_threshold)
+    # print("Best Accuracy:", best_accuracy)
+
+    # Define the ranges
+    # pos_thresholds = [i/10 for i in range(1, 4)]  # 0.1, 0.2, 0.3
+    # neg_thresholds = [i/10 for i in range(2, 5)]  # 0.2, 0.3, 0.4
+    # overlap_values = list(range(5, 55, 5))  # 5, 10, ..., 50
+
+    # # Define the ranges
+    # pos_thresholds = [i/10 for i in range(1, 8)]  # 0.1, 0.2, ..., 0.7
+    # neg_thresholds = [i/10 for i in range(1, 6)]  # 0.1, 0.2, ..., 0.5
+    # overlap_values = list(range(5, 55, 5))  # 5, 10, ..., 50
+
+    # best_accuracy = 0.0
+    # best_pos_threshold = 0.0
+    # best_neg_threshold = 0.0
+    # best_overlap = 0
+
+    # for pt in pos_thresholds:
+    #     for nt in neg_thresholds:
+    #         for ov in overlap_values:
+    #             # Sample a subset of examples for testing
+    #             sampled_examples = random.sample(examples, 30)
+
+    #             accuracy = predict_two_classes(sampled_examples, fact_checker, nt, pt, ov)
+    #             if accuracy > best_accuracy:
+    #                 best_accuracy = accuracy
+    #                 best_pos_threshold = pt
+    #                 best_neg_threshold = nt
+    #                 best_overlap = ov
+
+    #                 print("best so far:======")
+    #                 print("Best Positive Threshold:", best_pos_threshold)
+    #                 print("Best Negative Threshold:", best_neg_threshold)
+    #                 print("Best Overlap:", best_overlap)
+    #                 print("Best Accuracy:", best_accuracy)
+
+    # print("Best Positive Threshold:", best_pos_threshold)
+    # print("Best Negative Threshold:", best_neg_threshold)
+    # print("Best Overlap:", best_overlap)
+    # print("Best Accuracy:", best_accuracy)

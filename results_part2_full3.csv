@@ -1,0 +1,29 @@
+Fact,Clean Fact,# of Total Passages,# of Passage with S,# of Passage with NS,Golden Label,Prediction Label,Correct?
+Salazar earned 28 caps for the Peru national team.,Salazar earned 28 caps for the Peru national team.,2,0,2,NS,NS,Y
+"""Save the Last Dance for Me."" is popular.","""Save the Last Dance for Me."" is popular.",5,0,5,S,S,Y
+He served in the Princess Patricia's Canadian Light Infantry.,He served in the Princess Patricia's Canadian Light Infantry.,4,0,4,S,S,Y
+"Jonathan Haagensen was born on February 3, 1982.","Jonathan Haagensen was born on February 3, 1982.",3,0,3,NS,NS,Y
+His poems are known for their use of everyday language.,His poems are known for their use of everyday language.,3,0,3,NS,NS,Y
+They had three children together.,They had three children together.,3,0,3,NS,NS,Y
+Botak Chin led the Communist Party of Malaya (CPM).,Botak Chin led the Communist Party of Malaya (CPM).,3,0,3,NS,NS,Y
+She was born in Maracaibo.,She was born in Maracaibo.,2,0,2,S,S,Y
+Itakura has represented Japan at the Under-19-level.,Itakura has represented Japan at the Under-19-level.,3,0,3,NS,NS,Y
+Don Featherstone was a designer.,Don Featherstone was a designer.,3,0,3,S,S,Y
+Haagensen began his acting career in theater.,Haagensen began his acting career in theater.,3,0,3,S,NS,N
+Joey D. Vieira is an American.,Joey D. Vieira is an American.,3,0,3,S,S,Y
+He has worked as a researcher at various organizations.,He has worked as a researcher at various organizations.,2,0,2,NS,NS,Y
+Botak Chin was a communist.,Botak Chin was a communist.,3,0,3,NS,S,N
+Hibo Wardere is an author.,Hibo Wardere is an author.,3,0,3,S,S,Y
+Owen is known for his ability to perform aerial maneuvers with ease.,Owen is known for his ability to perform aerial maneuvers with ease.,3,0,3,NS,NS,Y
+He was born in Hull.,He was born in Hull.,2,0,2,NS,NS,Y
+Rennie Fritchie is a public servant.,Rennie Fritchie is a public servant.,2,0,2,S,S,Y
+Katsu currently lives in Virginia.,Katsu currently lives in Virginia.,3,0,3,NS,NS,Y
+Marianne McAndrew is an actress.,Marianne McAndrew is an actress.,2,0,2,S,S,Y
+Fernandinho participated in the 2014 FIFA World Cup.,Fernandinho participated in the 2014 FIFA World Cup.,2,0,2,NS,NS,Y
+Owen is known for his dynamic surfing style.,Owen is known for his dynamic surfing style.,3,0,3,NS,NS,Y
+Ardeshir Zahedi served as Iran's ambassador to the United States.,Ardeshir Zahedi served as Iran's ambassador to the United States.,3,0,3,S,NS,N
+Belly is a film.,Belly is a film.,3,0,3,S,S,Y
+Hibo Wardere is Somali-born.,Hibo Wardere is Somali-born.,3,0,3,S,S,Y
+The Deep is a novel by Katsu.,The Deep is a novel by Katsu.,3,0,3,S,S,Y
+Kerser is from Sydney.,Kerser is from Sydney.,4,0,4,NS,NS,Y
+Salazar left the Peru national team in 2003.,Salazar left the Peru national team in 2003.,2,0,2,NS,NS,Y
